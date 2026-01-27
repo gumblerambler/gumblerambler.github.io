@@ -3,78 +3,218 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ECCYB - Повний Дашборд Управління</title>
+    <title>ECCYB | Digital Economy & Information Technologies</title>
     <script src="https://unpkg.com/ethers@6.7.0/dist/ethers.umd.min.js"></script>
     <style>
-        :root { --primary: #1a73e8; --danger: #d93025; --success: #188038; --bg: #f8f9fa; --burn: #424242; --mint: #673ab7; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); display: flex; justify-content: center; padding: 20px; color: #333; }
-        .dashboard { background: white; border-radius: 16px; box-shadow: 0 8px 30px rgba(0,0,0,0.1); width: 100%; max-width: 500px; padding: 30px; text-align: center; }
-        .header { border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
-        .balance-box { background: linear-gradient(135deg, #1a73e8, #0d47a1); color: white; padding: 25px; border-radius: 15px; margin-bottom: 25px; }
-        .status-bar { font-size: 0.85em; color: #666; margin-bottom: 15px; word-break: break-all; font-family: monospace; }
-        input { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
-        button { padding: 10px 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.2s; color: white; margin-top: 5px; }
-        #connectBtn { background: var(--primary); width: 100%; }
-        #disconnectBtn { background: #6c757d; font-size: 0.8em; }
-        .admin-panel { background: #fdfdfd; border: 1px solid #e0e0e0; padding: 20px; border-radius: 12px; text-align: left; margin-top: 20px; }
-        .section { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px dashed #eee; }
-        .section:last-child { border-bottom: none; margin-bottom: 0; }
-        #console { background: #222; color: #0f0; padding: 12px; border-radius: 8px; font-family: monospace; font-size: 0.75em; text-align: left; height: 100px; overflow-y: auto; margin-top: 20px; }
-        h4 { margin: 0 0 10px 0; font-size: 0.9em; text-transform: uppercase; }
+        /* Академічний стиль: Стримана палітра та витончена типографіка */
+        :root {
+            --u-blue: #003366; /* Oxford Blue */
+            --u-gold: #a3c1ad; /* Стриманий акцент */
+            --u-text: #2c3e50;
+            --u-bg: #f4f4f2; /* Колір паперу */
+            --u-white: #ffffff;
+            --u-border: #d1d1d1;
+        }
+
+        body {
+            font-family: 'Georgia', serif; /* Академічний стандарт */
+            background-color: var(--u-bg);
+            color: var(--u-text);
+            line-height: 1.6;
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            background: var(--u-white);
+            max-width: 650px;
+            width: 100%;
+            padding: 40px;
+            border: 1px solid var(--u-border);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+        }
+
+        header {
+            text-align: center;
+            border-bottom: 2px double var(--u-blue);
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            margin: 0;
+            color: var(--u-blue);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .subtitle {
+            font-style: italic;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .balance-card {
+            background: var(--u-bg);
+            border: 1px solid var(--u-border);
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        #userBalance {
+            font-size: 2.2rem;
+            font-weight: normal;
+            color: var(--u-blue);
+            margin: 10px 0;
+        }
+
+        .panel {
+            text-align: left;
+            margin-top: 30px;
+            padding: 20px;
+            border: 1px solid var(--u-border);
+        }
+
+        h3 {
+            font-size: 1.1rem;
+            border-bottom: 1px solid var(--u-blue);
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+            color: var(--u-blue);
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--u-border);
+            font-family: 'Courier New', monospace; /* Для адрес */
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: var(--u-blue);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            cursor: pointer;
+            width: 100%;
+            font-family: 'Georgia', serif;
+            font-size: 1rem;
+            transition: background 0.3s;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #004d99;
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--u-blue);
+            border: 1px solid var(--u-blue);
+            margin-top: 5px;
+        }
+
+        .btn-burn { background-color: #5d0000; }
+        .btn-burn:hover { background-color: #8b0000; }
+
+        #console {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            height: 120px;
+            overflow-y: auto;
+            margin-top: 30px;
+            border-radius: 4px;
+        }
+
+        .footer-info {
+            font-size: 0.75rem;
+            text-align: center;
+            margin-top: 20px;
+            color: #888;
+        }
     </style>
 </head>
 <body>
 
-<div class="dashboard">
-    <div class="header">
-        <div style="text-align: left;">
-            <h2 style="margin:0; color: var(--primary);">ECCYB</h2>
-            <span style="font-size: 0.75em; color: #888;">ZIEIT Academic System</span>
-        </div>
-        <button id="disconnectBtn" style="display:none;">Вийти</button>
+<div class="container">
+    <header>
+        <h1>ECCYB System</h1>
+        <div class="subtitle">Цифрова економіка та інформаційні технології | BTTC Network</div>
+    </header>
+
+    <div id="authSection">
+        <button id="connectBtn">Ініціалізувати сесію (MetaMask)</button>
     </div>
 
-    <div id="status" class="status-bar">Очікування MetaMask...</div>
+    <div id="mainUI" style="display:none;">
+        <div class="balance-card">
+            <div id="accountType" style="font-size: 0.7rem; font-weight: bold; color: #777;">ОБЛІКОВИЙ ЗАПИС</div>
+            <div id="userBalance">-- ECCYB</div>
+            <div id="userAddr" style="font-size: 0.7rem; font-family: monospace; color: #999;"></div>
+        </div>
 
-    <div class="balance-box">
-        <div style="font-size: 0.8em; opacity: 0.9;">БАЛАНС АДМІНІСТРАТОРА</div>
-        <div id="userBalance" style="font-size: 2.5em; font-weight: bold;">-- ECCYB</div>
+        <div class="panel">
+            <h3>Внутрішній переказ (Transfer)</h3>
+            <div class="input-group">
+                <label>Адреса отримувача</label>
+                <input type="text" id="targetAddr" placeholder="0x...">
+            </div>
+            <div class="input-group">
+                <label>Сума токенів</label>
+                <input type="number" id="targetAmount" placeholder="0.00">
+            </div>
+            <button id="sendBtn">Виконати транзакцію</button>
+        </div>
+
+        <div id="adminPanel" class="panel" style="display:none; border-color: #a3c1ad;">
+            <h3>Управління емісією (Administrator)</h3>
+            <div class="input-group">
+                <label>Обсяг емісії (Mint)</label>
+                <input type="number" id="mintAmount" placeholder="Кількість">
+                <button id="mintBtn" class="btn-outline">Активувати емісію</button>
+            </div>
+            <div class="input-group" style="margin-top:20px;">
+                <label>Вилучення з обігу (Burn)</label>
+                <input type="number" id="burnAmount" placeholder="Кількість">
+                <button id="burnBtn" class="btn-burn">Спалити токени</button>
+            </div>
+        </div>
+
+        <button id="disconnectBtn" class="btn-outline" style="margin-top: 20px;">Завершити сесію</button>
     </div>
 
-    <button id="connectBtn">Підключити Гаманець</button>
+    <div id="console">Система очікує підключення до вузла блокчейну...</div>
 
-    <div id="adminPanel" class="admin-panel" style="display:none;">
-        <h3 style="color: var(--danger); margin-top: 0;">⚒ ПАНЕЛЬ УПРАВЛІННЯ</h3>
-        
-        <div class="section">
-            <h4 style="color: var(--mint);">✨ Емісія (Mint)</h4>
-            <label style="font-size: 0.8em;">Кількість нових балів:</label>
-            <input type="number" id="mintAmount" placeholder="Наприклад: 1000">
-            <button id="mintBtn" style="background: var(--mint); width: 100%;">Створити токени</button>
-        </div>
-
-        <div class="section">
-            <h4 style="color: var(--success);">💸 Розподіл (Transfer)</h4>
-            <input type="text" id="studentAddr" placeholder="Адреса студента 0x...">
-            <input type="number" id="sendAmount" placeholder="Сума переказу">
-            <button id="sendBtn" style="background: var(--success); width: 100%;">Відправити студенту</button>
-        </div>
-
-        <div class="section">
-            <h4 style="color: var(--burn);">🔥 Утилізація (Burn)</h4>
-            <input type="number" id="burnAmount" placeholder="Кількість для знищення">
-            <button id="burnBtn" style="background: var(--burn); width: 100%;">Спалити токени</button>
-        </div>
+    <div class="footer-info">
+        Протокол ECCYB розроблено для наукового дослідження ZIEIT. <br>
+        Всі операції є незмінними та фіксуються в BTTC Mainnet.
     </div>
-
-    <div id="console">Готовність системи...</div>
 </div>
 
 <script>
     const CONTRACT_ADDR = "0x4aa97493d7c8e570a548549222d21e91aa6c60ca";
     const OWNER_ADDR = "0xf08b28c6d8a26cd1a24d1dbc95c89005f1e04ead";
     
-    const ECCYB_ABI = [
+    const ABI = [
         "function balanceOf(address) view returns (uint256)",
         "function transfer(address, uint256) public returns (bool)",
         "function mint(address, uint256) public",
@@ -84,94 +224,91 @@
 
     let signer, contract, userAddress;
 
-    const log = (msg) => {
+    const log = (msg, hash = null) => {
         const c = document.getElementById('console');
-        c.innerHTML += `<br>> ${msg}`;
-        c.scrollTop = c.scrollHeight;
+        let html = `> ${msg}`;
+        if (hash) {
+            html += ` <br><small>TX: <a href="https://bttcscan.com/tx/${hash}" target="_blank" style="color: #a3c1ad;">Переглянути в BTTScan</a></small>`;
+        }
+        c.innerHTML = html + `<br>` + c.innerHTML;
+        c.scrollTop = 0;
     };
 
-    async function updateUI() {
+    async function syncData() {
         const bal = await contract.balanceOf(userAddress);
-        document.getElementById('userBalance').innerText = `${Math.floor(Number(ethers.formatUnits(bal, 18)))} ECCYB`;
+        const formatted = Math.floor(Number(ethers.formatUnits(bal, 18)));
+        document.getElementById('userBalance').innerText = `${formatted} ECCYB`;
     }
 
     async function connect() {
-        if (!window.ethereum) return alert("MetaMask не знайдено!");
+        if (!window.ethereum) return alert("MetaMask not found");
         try {
             const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
             userAddress = accounts[0];
             const provider = new ethers.BrowserProvider(window.ethereum);
             signer = await provider.getSigner();
-            contract = new ethers.Contract(CONTRACT_ADDR, ECCYB_ABI, signer);
+            contract = new ethers.Contract(CONTRACT_ADDR, ABI, signer);
 
-            document.getElementById('status').innerText = `Адреса: ${userAddress}`;
-            document.getElementById('connectBtn').style.display = 'none';
-            document.getElementById('disconnectBtn').style.display = 'block';
+            document.getElementById('authSection').style.display = 'none';
+            document.getElementById('mainUI').style.display = 'block';
+            document.getElementById('userAddr').innerText = userAddress;
 
             if (userAddress.toLowerCase() === OWNER_ADDR.toLowerCase()) {
                 document.getElementById('adminPanel').style.display = 'block';
-                log("Авторизовано як Головний Адміністратор.");
+                document.getElementById('accountType').innerText = "АДМІНІСТРАТИВНИЙ ДОСТУП";
+            } else {
+                document.getElementById('accountType').innerText = "СТУДЕНТСЬКИЙ ДОСТУП";
             }
 
-            await updateUI();
-            log("Дані синхронізовано.");
-        } catch (e) { log("Помилка: " + e.message); }
+            await syncData();
+            log("Сесію ініціалізовано для " + userAddress.substring(0, 10) + "...");
+        } catch (e) { log("Помилка доступу: " + e.message); }
     }
 
-    // МІНТ
+    async function handleTransfer() {
+        const to = document.getElementById('targetAddr').value;
+        const amt = document.getElementById('targetAmount').value;
+        if (!ethers.isAddress(to) || !amt) return;
+        try {
+            log("Надсилання запиту на переказ...");
+            const tx = await contract.transfer(to, ethers.parseUnits(amt, 18));
+            log("Транзакція в обробці...", tx.hash);
+            await tx.wait();
+            log("Транзакція успішно підтверджена.");
+            await syncData();
+        } catch (e) { log("Відмова: " + (e.reason || e.message)); }
+    }
+
     async function handleMint() {
         const amt = document.getElementById('mintAmount').value;
-        if (!amt || amt <= 0) return alert("Введіть кількість!");
         try {
-            log(`✨ Спроба емісії ${amt} ECCYB...`);
+            log("Запит на емісію активів...");
             const tx = await contract.mint(userAddress, ethers.parseUnits(amt, 18));
+            log("Емісія в процесі...", tx.hash);
             await tx.wait();
-            log("Емісія успішна! Баланс оновлено.");
-            await updateUI();
-        } catch (e) { log("Помилка мінту: " + e.message); }
+            log("Активи успішно створено.");
+            await syncData();
+        } catch (e) { log("Помилка емісії."); }
     }
 
-    // ТРАНСФЕР
-    async function handleTransfer() {
-        const to = document.getElementById('studentAddr').value;
-        const amt = document.getElementById('sendAmount').value;
-        if (!ethers.isAddress(to) || !amt) return alert("Перевірте адресу та суму!");
-        try {
-            log("Відправка транзакції...");
-            const tx = await contract.transfer(to, ethers.parseUnits(amt, 18));
-            await tx.wait();
-            log("Переказ успішний!");
-            await updateUI();
-        } catch (e) { log("Помилка переказу: " + e.message); }
-    }
-
-    // БЕРН
     async function handleBurn() {
         const amt = document.getElementById('burnAmount').value;
-        if (!amt) return;
         try {
-            log("🔥 Процес спалювання...");
+            log("Запит на деструкцію токенів...");
             const tx = await contract.burn(ethers.parseUnits(amt, 18));
+            log("Процес спалювання...", tx.hash);
             await tx.wait();
-            log("Токени знищено.");
-            await updateUI();
-        } catch (e) { log("Помилка: " + e.message); }
-    }
-
-    function disconnect() {
-        signer = null; contract = null;
-        document.getElementById('connectBtn').style.display = 'block';
-        document.getElementById('disconnectBtn').style.display = 'none';
-        document.getElementById('adminPanel').style.display = 'none';
-        document.getElementById('userBalance').innerText = "-- ECCYB";
-        log("Сесію закрито.");
+            log("Активи вилучено з обігу.");
+            await syncData();
+        } catch (e) { log("Помилка деструкції."); }
     }
 
     document.getElementById('connectBtn').onclick = connect;
-    document.getElementById('disconnectBtn').onclick = disconnect;
-    document.getElementById('mintBtn').onclick = handleMint;
     document.getElementById('sendBtn').onclick = handleTransfer;
+    document.getElementById('mintBtn').onclick = handleMint;
     document.getElementById('burnBtn').onclick = handleBurn;
+    document.getElementById('disconnectBtn').onclick = () => location.reload();
+
 </script>
 </body>
 </html>
