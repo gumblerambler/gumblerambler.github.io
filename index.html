@@ -89,8 +89,8 @@
                 log("Доступ викладача підтверджено");
             }
 
-            const bal = await contract.balanceOf(address);
-            document.getElementById('userBalance').innerText = `${ethers.formatUnits(bal, 18)} ECCYB`;
+            const formattedBalance = Math.floor(Number(ethers.formatUnits(bal, 18)));
+            document.getElementById('userBalance').innerText = `${formattedBalance} ECCYB`;
             log("Дані завантажено успішно");
 
         } catch (e) {
@@ -133,3 +133,4 @@
 
 </body>
 </html>
+
