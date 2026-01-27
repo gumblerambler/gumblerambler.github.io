@@ -2,212 +2,134 @@
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <title>ECCYB - Професійна Панель Управління</title>
+    <title>ECCYB - Панель ZIEIT (MetaMask Optimized)</title>
     <script src="https://unpkg.com/ethers@6.7.0/dist/ethers.umd.min.js"></script>
     <style>
-        :root { --primary: #1a73e8; --success: #28a745; --bg: #f8f9fa; }
-        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .dashboard { background: white; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); width: 100%; max-width: 800px; padding: 30px; }
-        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 20px; }
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
-        .stat-card { background: var(--bg); padding: 20px; border-radius: 12px; border-left: 5px solid var(--primary); }
-        .stat-label { font-size: 0.8em; color: #666; text-transform: uppercase; }
-        .stat-value { font-size: 1.4em; font-weight: bold; color: #222; margin-top: 5px; }
-        .admin-box { background: #fff4f4; border: 1px solid #ffebeb; padding: 20px; border-radius: 12px; margin-bottom: 30px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.9em; }
-        th { text-align: left; color: #666; padding: 10px; border-bottom: 2px solid #eee; }
-        td { padding: 12px 10px; border-bottom: 1px solid #eee; word-break: break-all; }
-        .tx-link { color: var(--primary); text-decoration: none; font-family: monospace; }
+        :root { --primary: #1a73e8; --danger: #d93025; --success: #188038; --bg: #f8f9fa; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); display: flex; justify-content: center; padding: 20px; }
+        .dashboard { background: white; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); width: 100%; max-width: 600px; padding: 25px; text-align: center; }
+        .header { border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .balance-box { background: var(--primary); color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; }
+        .status-bar { font-size: 0.85em; color: #666; margin-bottom: 15px; word-break: break-all; }
         input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
-        button { background: var(--primary); color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.2s; }
-        button:hover { opacity: 0.9; transform: translateY(-1px); }
-        #debug-console { background: #222; color: #0f0; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 0.8em; height: 100px; overflow-y: auto; margin-top: 20px; }
+        button { padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.2s; }
+        #connectBtn { background: var(--primary); color: white; width: 100%; }
+        #disconnectBtn { background: #6c757d; color: white; font-size: 0.8em; }
+        .admin-panel { background: #fff4f4; border: 1px solid #ffe2e2; padding: 20px; border-radius: 12px; text-align: left; margin-top: 20px; }
+        #console { background: #222; color: #0f0; padding: 10px; border-radius: 8px; font-family: monospace; font-size: 0.75em; text-align: left; height: 80px; overflow-y: auto; margin-top: 20px; }
     </style>
 </head>
 <body>
 
-    <div class="header">
-    <div>
-        <h2 style="margin:0;">ECCYB Гейміфікація</h2>
-        <span style="font-size: 0.8em; color: #888;">ZIEIT Academic Token System</span>
-    </div>
-    <div id="authActions">
-        <button id="connectBtn">Підключити Гаманець</button>
-        <button id="disconnectBtn" style="display:none; background: #6c757d;">Вийти</button>
-    </div>
-    
 <div class="dashboard">
-
-    <div class="stats-grid">
-        <div class="stat-card">
-            <div class="stat-label">Ваш баланс</div>
-            <div id="userBalance" class="stat-value">-- ECCYB</div>
-        </div>
-        <div class="stat-card" style="border-left-color: var(--success);">
-            <div class="stat-label">Статус мережі</div>
-            <div id="networkStatus" class="stat-value">Очікування...</div>
-        </div>
+    <div class="header">
+        <h3 style="margin:0;">ECCYB Гейміфікація</h3>
+        <button id="disconnectBtn" style="display:none;">Вийти</button>
     </div>
 
-    <div id="adminPanel" class="admin-box" style="display:none;">
-        <h3 style="margin-top:0; color: #d93025;">⚒ Панель Викладача</h3>
-        <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; align-items: end;">
-            <div>
-                <label style="font-size: 0.8em;">Адреса студента</label>
-                <input type="text" id="studentAddr" placeholder="0x...">
-            </div>
-            <div>
-                <label style="font-size: 0.8em;">Токени</label>
-                <input type="number" id="mintAmount" placeholder="Кількість">
-            </div>
-            <button id="mintBtn" style="background: var(--success); height: 45px; margin-bottom: 10px;">Нарахувати</button>
-        </div>
+    <div id="status" class="status-bar">Гаманець не підключено</div>
+
+    <div class="balance-box">
+        <div style="font-size: 0.9em; opacity: 0.8;">Мій баланс</div>
+        <div id="userBalance" style="font-size: 2em; font-weight: bold;">-- ECCYB</div>
     </div>
 
-</div>
+    <button id="connectBtn">Підключити MetaMask</button>
 
-    <h3>📜 Останні операції</h3>
-    <table id="historyTable">
-        <thead>
-            <tr>
-                <th>Тип</th>
-                <th>Отримувач / Хеш</th>
-                <th>Сума</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr><td colspan="3" style="text-align:center; color:#999;">Тут з'являться ваші транзакції</td>
-        </tbody>
-    </table>
+    <div id="adminPanel" class="admin-panel" style="display:none;">
+        <strong style="color: var(--danger);">⚒ Панель викладача (Mint)</strong>
+        <input type="text" id="studentAddr" placeholder="Адреса студента 0x...">
+        <input type="number" id="mintAmount" placeholder="Кількість токенів">
+        <button id="mintBtn" style="background: var(--success); color: white; width: 100%;">Нарахувати токени</button>
+    </div>
 
-    <div id="debug-console">Система готова. Очікування підключення...</div>
+    <div id="console">Система готова. Очікування підключення...</div>
 </div>
 
 <script>
     const CONTRACT_ADDR = "0x4aa97493d7c8e570a548549222d21e91aa6c60ca";
     const OWNER_ADDR = "0xf08b28c6d8a26cd1a24d1dbc95c89005f1e04ead";
-    let contract;
+    
+    // ОСЬ ТУТ МИ ВИЗНАЧАЄМО ABI
+    const ECCYB_ABI = [
+        "function balanceOf(address) view returns (uint256)",
+        "function mint(address, uint256) public",
+        "function decimals() view returns (uint8)"
+    ];
+
+    let signer, contract;
 
     const log = (msg) => {
-        const consoleEl = document.getElementById('debug-console');
-        consoleEl.innerHTML += `<br>> [${new Date().toLocaleTimeString()}] ${msg}`;
-        consoleEl.scrollTop = consoleEl.scrollHeight;
+        const c = document.getElementById('console');
+        c.innerHTML += `<br>> ${msg}`;
+        c.scrollTop = c.scrollHeight;
     };
 
-// Функція для "відключення"
-function disconnect() {
-    log("Сесію завершено користувачем");
-    
-    // 1. Скидаємо змінні
-    signer = null;
-    contract = null;
-
-    // 2. Повертаємо інтерфейс у початковий стан
-    document.getElementById('userBalance').innerText = "-- ECCYB";
-    document.getElementById('networkStatus').innerText = "Очікування...";
-    document.getElementById('status').innerText = "MetaMask не підключено";
-    
-    // 3. Керуємо кнопками
-    document.getElementById('connectBtn').style.display = 'block';
-    document.getElementById('disconnectBtn').style.display = 'none';
-    
-    // 4. Ховаємо адмін-панель
-    document.getElementById('adminPanel').style.display = 'none';
-    
-    // 5. Очищуємо таблицю історії (за бажанням)
-    document.querySelector("#historyTable tbody").innerHTML = '<tr><td colspan="3" style="text-align:center; color:#999;">Сесію закрито</td></tr>';
-}
-
-// Оновіть функцію init, щоб вона показувала кнопку виходу
-async function init() {
-    if (!window.ethereum) return alert("MetaMask не знайдено!");
-    
-    try {
-        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-        const userAddress = accounts[0];
+    async function connect() {
+        if (!window.ethereum) return alert("Встановіть MetaMask!");
         
-        provider = new ethers.BrowserProvider(window.ethereum);
-        signer = await provider.getSigner();
-        contract = new ethers.Contract(CONTRACT_ADDR, ABI, signer);
+        try {
+            log("Запит до MetaMask...");
+            const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+            const address = accounts[0];
 
-        // Відображення кнопок
-        document.getElementById('connectBtn').style.display = 'none';
-        document.getElementById('disconnectBtn').style.display = 'block';
-        
-        // Інші ваші перевірки (Owner, Balance тощо)...
-        log(`Успішний вхід: ${userAddress}`);
-        
-        // Оновлюємо статус (якщо є такий елемент)
-        if(document.getElementById('status')) {
-            document.getElementById('status').innerText = `Підключено: ${userAddress}`;
+            const provider = new ethers.BrowserProvider(window.ethereum);
+            signer = await provider.getSigner();
+            
+            // Використовуємо визначений ABI
+            contract = new ethers.Contract(CONTRACT_ADDR, ECCYB_ABI, signer);
+
+            // Оновлення інтерфейсу
+            document.getElementById('status').innerText = `Підключено: ${address}`;
+            document.getElementById('connectBtn').style.display = 'none';
+            document.getElementById('disconnectBtn').style.display = 'block';
+
+            if (address.toLowerCase() === OWNER_ADDR.toLowerCase()) {
+                document.getElementById('adminPanel').style.display = 'block';
+                log("Доступ викладача підтверджено");
+            }
+
+            const bal = await contract.balanceOf(address);
+            document.getElementById('userBalance').innerText = `${ethers.formatUnits(bal, 18)} ECCYB`;
+            log("Дані завантажено успішно");
+
+        } catch (e) {
+            log("Помилка входу: " + e.message);
         }
-
-    } catch (e) {
-        log("Помилка входу: " + e.message);
     }
-}
 
-    async function mint() {
+    function disconnect() {
+        signer = null;
+        contract = null;
+        document.getElementById('status').innerText = "Гаманець не підключено";
+        document.getElementById('userBalance').innerText = "-- ECCYB";
+        document.getElementById('connectBtn').style.display = 'block';
+        document.getElementById('disconnectBtn').style.display = 'none';
+        document.getElementById('adminPanel').style.display = 'none';
+        log("Сесію завершено");
+    }
+
+    async function handleMint() {
         const to = document.getElementById('studentAddr').value;
         const amt = document.getElementById('mintAmount').value;
-        if(!to || !amt) return;
+        if (!to || !amt) return alert("Заповніть всі поля!");
 
         try {
-            log(`Відправка транзакції на ${to}...`);
+            log("Відправка транзакції...");
             const tx = await contract.mint(to, ethers.parseUnits(amt, 18));
-            log(`Транзакція в мережі: ${tx.hash}`);
-            
-            addHistoryRow("MINT", tx.hash, amt);
-            
+            log(`Хеш: ${tx.hash.substring(0, 20)}...`);
             await tx.wait();
-            log("Транзакція ПІДТВЕРДЖЕНА!");
-            alert("Токени успішно нараховано!");
-        } catch (e) { log("Помилка транзакції: " + e.message); }
+            log("УСПІХ! Токени нараховано.");
+            alert("Бонуси студенту нараховано успішно!");
+        } catch (e) {
+            log("Помилка мінту: " + e.message);
+        }
     }
 
-    function addHistoryRow(type, hash, amount) {
-        const tbody = document.querySelector("#historyTable tbody");
-        if(tbody.innerText.includes("Тут з'являться")) tbody.innerHTML = "";
-        
-        const row = `<tr>
-            <td><span style="color:green; font-weight:bold;">${type}</span></td>
-            <td><a href="https://bttcscan.com/tx/${hash}" target="_blank" class="tx-link">${hash.substring(0,20)}...</a></td>
-            <td><b>${amount} ECCYB</b></td>
-        </tr>`;
-        tbody.innerHTML = row + tbody.innerHTML;
-    }
-
-    // Функція для автоматичного додавання токена ECCYB у MetaMask студента
-async function watchToken() {
-    try {
-        await window.ethereum.request({
-            method: 'wallet_watchAsset',
-            params: {
-                type: 'ERC20',
-                options: {
-                    address: CONTRACT_ADDR,
-                    symbol: 'ECCYB',
-                    decimals: 18,
-                    image: 'https://projects.eccyb.org/lib/exe/fetch.php?w=200&tok=a503a5&media=logo_eccyb_200_2.jpg', // Можна використати лого журналу
-                },
-            },
-        });
-    } catch (error) {
-        console.log(error);
-    }
-}
-
-    document.getElementById('connectBtn').onclick = init;
-    document.getElementById('mintBtn').onclick = mint;
-    // Прив'язка до кнопок у window.onload
+    document.getElementById('connectBtn').onclick = connect;
     document.getElementById('disconnectBtn').onclick = disconnect;
+    document.getElementById('mintBtn').onclick = handleMint;
 </script>
 
 </body>
 </html>
-
-
-
-
-
-
