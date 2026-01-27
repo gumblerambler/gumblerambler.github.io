@@ -3,21 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ECCYB | Digital Economy & Information Technologies</title>
+    <title>ECCYB | Digital Economy System</title>
     <script src="https://unpkg.com/ethers@6.7.0/dist/ethers.umd.min.js"></script>
     <style>
-        /* Академічний стиль: Стримана палітра та витончена типографіка */
         :root {
-            --u-blue: #003366; /* Oxford Blue */
-            --u-gold: #a3c1ad; /* Стриманий акцент */
+            --u-blue: #003366;
             --u-text: #2c3e50;
-            --u-bg: #f4f4f2; /* Колір паперу */
+            --u-bg: #f4f4f2;
             --u-white: #ffffff;
             --u-border: #d1d1d1;
         }
 
         body {
-            font-family: 'Georgia', serif; /* Академічний стандарт */
+            font-family: 'Georgia', serif;
             background-color: var(--u-bg);
             color: var(--u-text);
             line-height: 1.6;
@@ -34,6 +32,28 @@
             padding: 40px;
             border: 1px solid var(--u-border);
             box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            position: relative;
+        }
+
+        .lang-switch {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+
+        .lang-btn {
+            background: none;
+            border: 1px solid var(--u-blue);
+            color: var(--u-blue);
+            padding: 3px 8px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+        }
+
+        .lang-btn.active {
+            background: var(--u-blue);
+            color: white;
         }
 
         header {
@@ -43,19 +63,8 @@
             padding-bottom: 20px;
         }
 
-        h1 {
-            font-size: 1.8rem;
-            margin: 0;
-            color: var(--u-blue);
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-
-        .subtitle {
-            font-style: italic;
-            font-size: 0.9rem;
-            color: #666;
-        }
+        h1 { font-size: 1.8rem; margin: 0; color: var(--u-blue); text-transform: uppercase; letter-spacing: 2px; }
+        .subtitle { font-style: italic; font-size: 0.9rem; color: #666; }
 
         .balance-card {
             background: var(--u-bg);
@@ -65,48 +74,16 @@
             margin-bottom: 30px;
         }
 
-        #userBalance {
-            font-size: 2.2rem;
-            font-weight: normal;
-            color: var(--u-blue);
-            margin: 10px 0;
-        }
+        #userBalance { font-size: 2.2rem; color: var(--u-blue); margin: 10px 0; }
 
-        .panel {
-            text-align: left;
-            margin-top: 30px;
-            padding: 20px;
-            border: 1px solid var(--u-border);
-        }
+        .panel { text-align: left; margin-top: 30px; padding: 20px; border: 1px solid var(--u-border); }
+        h3 { font-size: 1.1rem; border-bottom: 1px solid var(--u-blue); padding-bottom: 5px; margin-bottom: 15px; color: var(--u-blue); }
 
-        h3 {
-            font-size: 1.1rem;
-            border-bottom: 1px solid var(--u-blue);
-            padding-bottom: 5px;
-            margin-bottom: 15px;
-            color: var(--u-blue);
-        }
+        .input-group { margin-bottom: 15px; }
+        label { display: block; font-size: 0.85rem; font-weight: bold; margin-bottom: 5px; }
+        input { width: 100%; padding: 10px; border: 1px solid var(--u-border); font-family: 'Courier New', monospace; box-sizing: border-box; }
 
-        .input-group {
-            margin-bottom: 15px;
-        }
-
-        label {
-            display: block;
-            font-size: 0.85rem;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid var(--u-border);
-            font-family: 'Courier New', monospace; /* Для адрес */
-            box-sizing: border-box;
-        }
-
-        button {
+        button.main-btn {
             background-color: var(--u-blue);
             color: white;
             border: none;
@@ -115,23 +92,11 @@
             width: 100%;
             font-family: 'Georgia', serif;
             font-size: 1rem;
-            transition: background 0.3s;
             margin-top: 10px;
         }
 
-        button:hover {
-            background-color: #004d99;
-        }
-
-        .btn-outline {
-            background: transparent;
-            color: var(--u-blue);
-            border: 1px solid var(--u-blue);
-            margin-top: 5px;
-        }
-
-        .btn-burn { background-color: #5d0000; }
-        .btn-burn:hover { background-color: #8b0000; }
+        .btn-outline { background: transparent; color: var(--u-blue); border: 1px solid var(--u-blue); width: 100%; padding: 10px; cursor: pointer; margin-top: 5px; }
+        .btn-burn { background-color: #5d0000; color: white; border: none; width: 100%; padding: 10px; cursor: pointer; margin-top: 10px; }
 
         #console {
             background: #2c3e50;
@@ -142,102 +107,148 @@
             height: 120px;
             overflow-y: auto;
             margin-top: 30px;
-            border-radius: 4px;
-        }
-
-        .footer-info {
-            font-size: 0.75rem;
-            text-align: center;
-            margin-top: 20px;
-            color: #888;
         }
     </style>
 </head>
 <body>
 
 <div class="container">
+    <div class="lang-switch">
+        <button class="lang-btn active" onclick="setLang('ua')">UA</button>
+        <button class="lang-btn" onclick="setLang('en')">EN</button>
+    </div>
+
     <header>
-        <h1>ECCYB System</h1>
-        <div class="subtitle">Цифрова економіка та інформаційні технології | BTTC Network</div>
+        <h1 data-key="title">ECCYB System</h1>
+        <div class="subtitle" data-key="subtitle">Цифрова економіка та інформаційні технології | BTTC Network</div>
     </header>
 
     <div id="authSection">
-        <button id="connectBtn">Ініціалізувати сесію (MetaMask)</button>
+        <button class="main-btn" id="connectBtn" data-key="connectBtn">Ініціалізувати сесію (MetaMask)</button>
     </div>
 
     <div id="mainUI" style="display:none;">
         <div class="balance-card">
-            <div id="accountType" style="font-size: 0.7rem; font-weight: bold; color: #777;">ОБЛІКОВИЙ ЗАПИС</div>
+            <div id="accountType" data-key="accType" style="font-size: 0.7rem; font-weight: bold; color: #777;">ОБЛІКОВИЙ ЗАПИС</div>
             <div id="userBalance">-- ECCYB</div>
             <div id="userAddr" style="font-size: 0.7rem; font-family: monospace; color: #999;"></div>
         </div>
 
         <div class="panel">
-            <h3>Внутрішній переказ (Transfer)</h3>
+            <h3 data-key="transferTitle">Внутрішній переказ (Transfer)</h3>
             <div class="input-group">
-                <label>Адреса отримувача</label>
+                <label data-key="labelAddr">Адреса отримувача</label>
                 <input type="text" id="targetAddr" placeholder="0x...">
             </div>
             <div class="input-group">
-                <label>Сума токенів</label>
+                <label data-key="labelAmt">Сума токенів</label>
                 <input type="number" id="targetAmount" placeholder="0.00">
             </div>
-            <button id="sendBtn">Виконати транзакцію</button>
+            <button class="main-btn" id="sendBtn" data-key="sendBtn">Виконати транзакцію</button>
         </div>
 
         <div id="adminPanel" class="panel" style="display:none; border-color: #a3c1ad;">
-            <h3>Управління емісією (Administrator)</h3>
+            <h3 data-key="adminTitle">Управління емісією (Administrator)</h3>
             <div class="input-group">
-                <label>Обсяг емісії (Mint)</label>
-                <input type="number" id="mintAmount" placeholder="Кількість">
-                <button id="mintBtn" class="btn-outline">Активувати емісію</button>
+                <label data-key="labelMint">Обсяг емісії (Mint)</label>
+                <input type="number" id="mintAmount" placeholder="Amount">
+                <button class="btn-outline" id="mintBtn" data-key="mintBtn">Активувати емісію</button>
             </div>
             <div class="input-group" style="margin-top:20px;">
-                <label>Вилучення з обігу (Burn)</label>
-                <input type="number" id="burnAmount" placeholder="Кількість">
-                <button id="burnBtn" class="btn-burn">Спалити токени</button>
+                <label data-key="labelBurn">Вилучення з обігу (Burn)</label>
+                <input type="number" id="burnAmount" placeholder="Amount">
+                <button class="btn-burn" id="burnBtn" data-key="burnBtn">Спалити токени</button>
             </div>
         </div>
 
-        <button id="disconnectBtn" class="btn-outline" style="margin-top: 20px;">Завершити сесію</button>
+        <button class="btn-outline" id="disconnectBtn" data-key="exitBtn" style="margin-top: 20px;">Завершити сесію</button>
     </div>
 
-    <div id="console">Система очікує підключення до вузла блокчейну...</div>
-
-    <div class="footer-info">
-        Протокол ECCYB розроблено для наукового дослідження ZIEIT. <br>
-        Всі операції є незмінними та фіксуються в BTTC Mainnet.
-    </div>
+    <div id="console" data-key="consoleInit">Система очікує підключення...</div>
 </div>
 
 <script>
     const CONTRACT_ADDR = "0x4aa97493d7c8e570a548549222d21e91aa6c60ca";
     const OWNER_ADDR = "0xf08b28c6d8a26cd1a24d1dbc95c89005f1e04ead";
     
-    const ABI = [
-        "function balanceOf(address) view returns (uint256)",
-        "function transfer(address, uint256) public returns (bool)",
-        "function mint(address, uint256) public",
-        "function burn(uint256) public",
-        "function decimals() view returns (uint8)"
-    ];
+    const i18n = {
+        ua: {
+            title: "ECCYB System",
+            subtitle: "Цифрова економіка та інформаційні технології | BTTC Network",
+            connectBtn: "Ініціалізувати сесію (MetaMask)",
+            accType: "ОБЛІКОВИЙ ЗАПИС",
+            accAdmin: "АДМІНІСТРАТИВНИЙ ДОСТУП",
+            accStudent: "СТУДЕНТСЬКИЙ ДОСТУП",
+            transferTitle: "Внутрішній переказ (Transfer)",
+            labelAddr: "Адреса отримувача",
+            labelAmt: "Сума токенів",
+            sendBtn: "Виконати транзакцію",
+            adminTitle: "Управління емісією (Administrator)",
+            labelMint: "Обсяг емісії (Mint)",
+            mintBtn: "Активувати емісію",
+            labelBurn: "Вилучення з обігу (Burn)",
+            burnBtn: "Спалити токени",
+            exitBtn: "Завершити сесію",
+            consoleInit: "Система очікує підключення...",
+            logConn: "Сесію ініціалізовано для ",
+            logWait: "Транзакція в обробці...",
+            logSuccess: "Транзакція успішно підтверджена.",
+            logMint: "Запит на емісію активів...",
+            logBurn: "Запит на деструкцію токенів...",
+            viewScan: "Переглянути в BTTScan"
+        },
+        en: {
+            title: "ECCYB System",
+            subtitle: "Digital Economy & Information Technologies | BTTC Network",
+            connectBtn: "Initialize Session (MetaMask)",
+            accType: "ACCOUNT TYPE",
+            accAdmin: "ADMINISTRATIVE ACCESS",
+            accStudent: "STUDENT ACCESS",
+            transferTitle: "Internal Asset Transfer",
+            labelAddr: "Recipient Address",
+            labelAmt: "Token Amount",
+            sendBtn: "Execute Transaction",
+            adminTitle: "Emission Management (Administrator)",
+            labelMint: "Minting Volume",
+            mintBtn: "Activate Emission",
+            labelBurn: "Asset Destruction (Burn)",
+            burnBtn: "Burn Tokens",
+            exitBtn: "Terminate Session",
+            consoleInit: "System awaiting connection...",
+            logConn: "Session initialized for ",
+            logWait: "Transaction processing...",
+            logSuccess: "Transaction successfully confirmed.",
+            logMint: "Asset emission request...",
+            logBurn: "Asset destruction request...",
+            viewScan: "View on BTTScan"
+        }
+    };
 
+    let currentLang = 'ua';
     let signer, contract, userAddress;
 
-    const log = (msg, hash = null) => {
+    function setLang(lang) {
+        currentLang = lang;
+        document.querySelectorAll('[data-key]').forEach(el => {
+            const key = el.getAttribute('data-key');
+            if (i18n[lang][key]) el.innerText = i18n[lang][key];
+        });
+        document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.toggle('active', btn.innerText.toLowerCase() === lang));
+    }
+
+    const log = (msgKey, hash = null) => {
         const c = document.getElementById('console');
+        const msg = i18n[currentLang][msgKey] || msgKey;
         let html = `> ${msg}`;
         if (hash) {
-            html += ` <br><small>TX: <a href="https://bttcscan.com/tx/${hash}" target="_blank" style="color: #a3c1ad;">Переглянути в BTTScan</a></small>`;
+            html += ` <br><small>TX: <a href="https://bttcscan.com/tx/${hash}" target="_blank" style="color: #a3c1ad;">${i18n[currentLang].viewScan}</a></small>`;
         }
         c.innerHTML = html + `<br>` + c.innerHTML;
-        c.scrollTop = 0;
     };
 
     async function syncData() {
         const bal = await contract.balanceOf(userAddress);
-        const formatted = Math.floor(Number(ethers.formatUnits(bal, 18)));
-        document.getElementById('userBalance').innerText = `${formatted} ECCYB`;
+        document.getElementById('userBalance').innerText = `${Math.floor(Number(ethers.formatUnits(bal, 18)))} ECCYB`;
     }
 
     async function connect() {
@@ -247,66 +258,51 @@
             userAddress = accounts[0];
             const provider = new ethers.BrowserProvider(window.ethereum);
             signer = await provider.getSigner();
-            contract = new ethers.Contract(CONTRACT_ADDR, ABI, signer);
+            contract = new ethers.Contract(CONTRACT_ADDR, [
+                "function balanceOf(address) view returns (uint256)",
+                "function transfer(address, uint256) public returns (bool)",
+                "function mint(address, uint256) public",
+                "function burn(uint256) public"
+            ], signer);
 
             document.getElementById('authSection').style.display = 'none';
             document.getElementById('mainUI').style.display = 'block';
             document.getElementById('userAddr').innerText = userAddress;
 
-            if (userAddress.toLowerCase() === OWNER_ADDR.toLowerCase()) {
-                document.getElementById('adminPanel').style.display = 'block';
-                document.getElementById('accountType').innerText = "АДМІНІСТРАТИВНИЙ ДОСТУП";
-            } else {
-                document.getElementById('accountType').innerText = "СТУДЕНТСЬКИЙ ДОСТУП";
-            }
+            const isAdmin = userAddress.toLowerCase() === OWNER_ADDR.toLowerCase();
+            document.getElementById('adminPanel').style.display = isAdmin ? 'block' : 'none';
+            document.getElementById('accountType').innerText = i18n[currentLang][isAdmin ? 'accAdmin' : 'accStudent'];
 
             await syncData();
-            log("Сесію ініціалізовано для " + userAddress.substring(0, 10) + "...");
-        } catch (e) { log("Помилка доступу: " + e.message); }
+            log(i18n[currentLang].logConn + userAddress.substring(0, 8) + "...");
+        } catch (e) { log(e.message); }
     }
 
-    async function handleTransfer() {
-        const to = document.getElementById('targetAddr').value;
-        const amt = document.getElementById('targetAmount').value;
-        if (!ethers.isAddress(to) || !amt) return;
+    async function handleTx(action, method, ...args) {
         try {
-            log("Надсилання запиту на переказ...");
-            const tx = await contract.transfer(to, ethers.parseUnits(amt, 18));
-            log("Транзакція в обробці...", tx.hash);
+            log(i18n[currentLang][action]);
+            const tx = await contract[method](...args);
+            log("logWait", tx.hash);
             await tx.wait();
-            log("Транзакція успішно підтверджена.");
+            log("logSuccess");
             await syncData();
-        } catch (e) { log("Відмова: " + (e.reason || e.message)); }
-    }
-
-    async function handleMint() {
-        const amt = document.getElementById('mintAmount').value;
-        try {
-            log("Запит на емісію активів...");
-            const tx = await contract.mint(userAddress, ethers.parseUnits(amt, 18));
-            log("Емісія в процесі...", tx.hash);
-            await tx.wait();
-            log("Активи успішно створено.");
-            await syncData();
-        } catch (e) { log("Помилка емісії."); }
-    }
-
-    async function handleBurn() {
-        const amt = document.getElementById('burnAmount').value;
-        try {
-            log("Запит на деструкцію токенів...");
-            const tx = await contract.burn(ethers.parseUnits(amt, 18));
-            log("Процес спалювання...", tx.hash);
-            await tx.wait();
-            log("Активи вилучено з обігу.");
-            await syncData();
-        } catch (e) { log("Помилка деструкції."); }
+        } catch (e) { log(e.message); }
     }
 
     document.getElementById('connectBtn').onclick = connect;
-    document.getElementById('sendBtn').onclick = handleTransfer;
-    document.getElementById('mintBtn').onclick = handleMint;
-    document.getElementById('burnBtn').onclick = handleBurn;
+    document.getElementById('sendBtn').onclick = () => {
+        const to = document.getElementById('targetAddr').value;
+        const amt = document.getElementById('targetAmount').value;
+        if (ethers.isAddress(to) && amt) handleTx('transferTitle', 'transfer', to, ethers.parseUnits(amt, 18));
+    };
+    document.getElementById('mintBtn').onclick = () => {
+        const amt = document.getElementById('mintAmount').value;
+        if (amt) handleTx('logMint', 'mint', userAddress, ethers.parseUnits(amt, 18));
+    };
+    document.getElementById('burnBtn').onclick = () => {
+        const amt = document.getElementById('burnAmount').value;
+        if (amt) handleTx('logBurn', 'burn', ethers.parseUnits(amt, 18));
+    };
     document.getElementById('disconnectBtn').onclick = () => location.reload();
 
 </script>
