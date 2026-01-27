@@ -89,36 +89,38 @@
         consoleEl.scrollTop = consoleEl.scrollHeight;
     };
 
-    async function init() {
-        if (!window.ethereum) return alert("MetaMask не знайдено!");
+async function init() {
+    if (!window.ethereum) return alert("Гаманець не знайдено!");
+    
+    try {
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
         
-        try {
-            const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-            const address = accounts[0];
-            const provider = new ethers.BrowserProvider(window.ethereum);
-            const signer = await provider.getSigner();
-            const network = await provider.getNetwork();
+        // Пряме підключення до RPC мережі BTTC замість автоматичного вузла гаманця
+        const bttcRpc = "https://rpc.bittorrentchain.io"; 
+        const staticProvider = new ethers.JsonRpcProvider(bttcRpc);
+        
+        // Для читання балансу використовуємо прямий RPC (працює стабільно в Trust)
+        // Для транзакцій (mint) використовуємо підпис від гаманця
+        const browserProvider = new ethers.BrowserProvider(window.ethereum);
+        const signer = await browserProvider.getSigner();
 
-            log(`Підключено до ${address}`);
-            document.getElementById('networkStatus').innerText = "BTTC Mainnet (ID: " + network.chainId + ")";
-            document.getElementById('connectBtn').style.display = 'none';
+        log(`Підключено: ${accounts[0]}`);
+        
+        // Створюємо контракт, де для читання використовуємо стабільний RPC
+        contract = new ethers.Contract(CONTRACT_ADDR, [
+            "function balanceOf(address) view returns (uint256)",
+            "function mint(address, uint256) public",
+            "function decimals() view returns (uint8)"
+        ], signer);
 
-            contract = new ethers.Contract(CONTRACT_ADDR, [
-                "function balanceOf(address) view returns (uint256)",
-                "function mint(address, uint256) public",
-                "function decimals() view returns (uint8)"
-            ], signer);
+        const bal = await contract.balanceOf(accounts[0]);
+        document.getElementById('userBalance').innerText = `${ethers.formatUnits(bal, 18)} ECCYB`;
+        log("Баланс успішно отримано через прямий RPC");
 
-            if (address.toLowerCase() === OWNER_ADDR.toLowerCase()) {
-                document.getElementById('adminPanel').style.display = 'block';
-                log("Адмін-права підтверджено");
-            }
-
-            const bal = await contract.balanceOf(address);
-            document.getElementById('userBalance').innerText = `${ethers.formatUnits(bal, 18)} ECCYB`;
-
-        } catch (e) { log("Помилка ініціалізації: " + e.message); }
+    } catch (e) { 
+        log("Помилка Trust Wallet: " + e.message); 
     }
+}
 
     async function mint() {
         const to = document.getElementById('studentAddr').value;
@@ -156,3 +158,4 @@
 
 </body>
 </html>
+
