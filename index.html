@@ -155,11 +155,32 @@ async function init() {
         tbody.innerHTML = row + tbody.innerHTML;
     }
 
+    // Функція для автоматичного додавання токена ECCYB у MetaMask студента
+async function watchToken() {
+    try {
+        await window.ethereum.request({
+            method: 'wallet_watchAsset',
+            params: {
+                type: 'ERC20',
+                options: {
+                    address: CONTRACT_ADDR,
+                    symbol: 'ECCYB',
+                    decimals: 18,
+                    image: 'https://projects.eccyb.org/lib/exe/fetch.php?w=200&tok=a503a5&media=logo_eccyb_200_2.jpg', // Можна використати лого журналу
+                },
+            },
+        });
+    } catch (error) {
+        console.log(error);
+    }
+}
+
     document.getElementById('connectBtn').onclick = init;
     document.getElementById('mintBtn').onclick = mint;
 </script>
 
 </body>
 </html>
+
 
 
