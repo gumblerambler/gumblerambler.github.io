@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>ECCYB - ТЕСТ ПІДКЛЮЧЕННЯ</title>
+    <script src="https://unpkg.com/ethers@6.7.0/dist/ethers.umd.min.js"></script>
+    <style>
+        body { font-family: sans-serif; text-align: center; padding: 50px; background: #f4f4f4; }
+        .box { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); display: inline-block; min-width: 300px; }
+        #debug { color: red; font-size: 0.8em; margin-top: 10px; border: 1px solid #ddd; padding: 10px; text-align: left; background: #eee; }
+        button { padding: 15px 30px; font-size: 18px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 5px; }
+        .success { color: green; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="box">
+    <h2>ECCYB Гейміфікація</h2>
+    <div id="status">Очікування дії...</div>
+    <br>
+    <button id="btn">ПІДКЛЮЧИТИ METAMASK</button>
+    
+    <div id="admin" style="display:none; margin-top: 20px; border-top: 1px solid #ccc; padding-top: 10px;">
+        <p class="success">Ви авторизовані як Власник!</p>
+        <input type="text" id="to" placeholder="Адреса студента" style="width: 80%; padding: 5px;"><br><br>
+        <input type="number" id="amt" placeholder="Кількість токенів" style="width: 80%; padding: 5px;"><br><br>
+        <button id="mintBtn" style="background: green; font-size: 14px;">Нарахувати</button>
+    </div>
+
+    <h4>Лог відладки:</h4>
+    <div id="debug">Ініціалізація...</div>
+</div>
+
+<script>
+    const log = (msg) => {
+        document.getElementById('debug').innerHTML += "<br>> " + msg;
+        console.log(msg);
+    };
+
+    const CONTRACT = "0x4aa97493d7c8e570a548549222d21e91aa6c60ca";
+    const OWNER = "0xf08b28c6d8a26cd1a24d1dbc95c89005f1e04ead";
+    let signer, contract;
+
+    window.onload = () => {
+        log("Сторінка завантажена");
+        
+        // Перевірка чи завантажилась бібліотека
+        if (typeof ethers === 'undefined') {
+            log("ПОМИЛКА: Бібліотека ethers не завантажена! Перевірте інтернет.");
+            return;
+        } else {
+            log("Бібліотека ethers OK");
+        }
+
+        document.getElementById('btn').onclick = async () => {
+            log("Кнопка натиснута");
+            
+            if (!window.ethereum) {
+                log("ПОМИЛКА: MetaMask не знайдено!");
+                alert("Встановіть MetaMask!");
+                return;
+            }
+
+            try {
+                log("Запит до MetaMask...");
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                const address = accounts[0];
+                log("Доступ отримано: " + address);
+
+                const provider = new ethers.BrowserProvider(window.ethereum);
+                signer = await provider.getSigner();
+                
+                document.getElementById('status').innerHTML = `<span class="success">Підключено: ${address}</span>`;
+                document.getElementById('btn').style.display = 'none';
+
+                if (address.toLowerCase() === OWNER.toLowerCase()) {
+                    document.getElementById('admin').style.display = 'block';
+                }
+
+                // Ініціалізація контракту для мінту
+                contract = new ethers.Contract(CONTRACT, [
+                    "function mint(address to, uint256 amount) public",
+                    "function decimals() view returns (uint8)"
+                ], signer);
+
+            } catch (err) {
+                log("КРИТИЧНА ПОМИЛКА: " + err.message);
+            }
+        };
+
+        document.getElementById('mintBtn').onclick = async () => {
+            try {
+                const to = document.getElementById('to').value;
+                const val = document.getElementById('amt').value;
+                log("Спроба мінту...");
+                const tx = await contract.mint(to, ethers.parseUnits(val, 18));
+                log("Транзакція відправлена: " + tx.hash);
+                await tx.wait();
+                log("УСПІХ: Токени в мережі!");
+                alert("Готово!");
+            } catch (e) {
+                log("Помилка мінту: " + e.message);
+            }
+        };
+    };
+</script>
+
+</body>
+</html>
