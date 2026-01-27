@@ -27,12 +27,15 @@
 <body>
 
 <div class="dashboard">
+
     <div class="header">
-        <div>
-            <h2 style="margin:0;">ECCYB Гейміфікація</h2>
-            <span style="font-size: 0.8em; color: #888;">ZIEIT Academic Token System • BTTC Mainnet</span>
-        </div>
+    <div>
+        <h2 style="margin:0;">ECCYB Гейміфікація</h2>
+        <span style="font-size: 0.8em; color: #888;">ZIEIT Academic Token System</span>
+    </div>
+    <div id="authActions">
         <button id="connectBtn">Підключити Гаманець</button>
+        <button id="disconnectBtn" style="display:none; background: #6c757d;">Вийти</button>
     </div>
 
     <div class="stats-grid">
@@ -60,15 +63,7 @@
             <button id="mintBtn" style="background: var(--success); height: 45px; margin-bottom: 10px;">Нарахувати</button>
         </div>
     </div>
-    <div class="header">
-    <div>
-        <h2 style="margin:0;">ECCYB Гейміфікація</h2>
-        <span style="font-size: 0.8em; color: #888;">ZIEIT Academic Token System</span>
-    </div>
-    <div id="authActions">
-        <button id="connectBtn">Підключити Гаманець</button>
-        <button id="disconnectBtn" style="display:none; background: #6c757d;">Вийти</button>
-    </div>
+
 </div>
 
     <h3>📜 Останні операції</h3>
@@ -205,11 +200,12 @@ async function watchToken() {
     document.getElementById('connectBtn').onclick = init;
     document.getElementById('mintBtn').onclick = mint;
     // Прив'язка до кнопок у window.onload
-document.getElementById('disconnectBtn').onclick = disconnect;
+    document.getElementById('disconnectBtn').onclick = disconnect;
 </script>
 
 </body>
 </html>
+
 
 
 
