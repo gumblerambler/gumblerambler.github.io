@@ -60,6 +60,16 @@
             <button id="mintBtn" style="background: var(--success); height: 45px; margin-bottom: 10px;">Нарахувати</button>
         </div>
     </div>
+    <div class="header">
+    <div>
+        <h2 style="margin:0;">ECCYB Гейміфікація</h2>
+        <span style="font-size: 0.8em; color: #888;">ZIEIT Academic Token System</span>
+    </div>
+    <div id="authActions">
+        <button id="connectBtn">Підключити Гаманець</button>
+        <button id="disconnectBtn" style="display:none; background: #6c757d;">Вийти</button>
+    </div>
+</div>
 
     <h3>📜 Останні операції</h3>
     <table id="historyTable">
@@ -89,39 +99,56 @@
         consoleEl.scrollTop = consoleEl.scrollHeight;
     };
 
+// Функція для "відключення"
+function disconnect() {
+    log("Сесію завершено користувачем");
+    
+    // 1. Скидаємо змінні
+    signer = null;
+    contract = null;
+
+    // 2. Повертаємо інтерфейс у початковий стан
+    document.getElementById('userBalance').innerText = "-- ECCYB";
+    document.getElementById('networkStatus').innerText = "Очікування...";
+    document.getElementById('status').innerText = "MetaMask не підключено";
+    
+    // 3. Керуємо кнопками
+    document.getElementById('connectBtn').style.display = 'block';
+    document.getElementById('disconnectBtn').style.display = 'none';
+    
+    // 4. Ховаємо адмін-панель
+    document.getElementById('adminPanel').style.display = 'none';
+    
+    // 5. Очищуємо таблицю історії (за бажанням)
+    document.querySelector("#historyTable tbody").innerHTML = '<tr><td colspan="3" style="text-align:center; color:#999;">Сесію закрито</td></tr>';
+}
+
+// Оновіть функцію init, щоб вона показувала кнопку виходу
 async function init() {
-    if (!window.ethereum) return alert("Гаманець не знайдено!");
+    if (!window.ethereum) return alert("MetaMask не знайдено!");
     
     try {
         const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
         const userAddress = accounts[0];
-        log(`Авторизовано: ${userAddress}`);
-
-        // СТВОРЮЄМО ДВА ПРОВАЙДЕРИ
-        // 1. Для читання (стабільний RPC BTTC) - йому байдуже на глюки Trust Wallet
-        const readProvider = new ethers.JsonRpcProvider("https://rpc.bittorrentchain.io");
         
-        // 2. Для підпису (через гаманець)
-        const walletProvider = new ethers.BrowserProvider(window.ethereum);
-        const signer = await walletProvider.getSigner();
+        provider = new ethers.BrowserProvider(window.ethereum);
+        signer = await provider.getSigner();
+        contract = new ethers.Contract(CONTRACT_ADDR, ABI, signer);
 
-        // Створюємо два екземпляри контракту
-        const readContract = new ethers.Contract(CONTRACT_ADDR, ["function balanceOf(address) view returns (uint256)"], readProvider);
-        contract = new ethers.Contract(CONTRACT_ADDR, ["function mint(address, uint256) public", "function decimals() view returns (uint8)"], signer);
-
-        // Читаємо баланс через ПРЯМИЙ вузол
-        const bal = await readContract.balanceOf(userAddress);
-        document.getElementById('userBalance').innerText = `${ethers.formatUnits(bal, 18)} ECCYB`;
-        document.getElementById('networkStatus').innerText = "BTTC (через Direct RPC)";
-        
+        // Відображення кнопок
         document.getElementById('connectBtn').style.display = 'none';
-        if (userAddress.toLowerCase() === OWNER_ADDR.toLowerCase()) {
-            document.getElementById('adminPanel').style.display = 'block';
+        document.getElementById('disconnectBtn').style.display = 'block';
+        
+        // Інші ваші перевірки (Owner, Balance тощо)...
+        log(`Успішний вхід: ${userAddress}`);
+        
+        // Оновлюємо статус (якщо є такий елемент)
+        if(document.getElementById('status')) {
+            document.getElementById('status').innerText = `Підключено: ${userAddress}`;
         }
-        log("Дані успішно отримано (Hybrid Mode)");
 
-    } catch (e) { 
-        log("Помилка: " + e.message); 
+    } catch (e) {
+        log("Помилка входу: " + e.message);
     }
 }
 
@@ -177,10 +204,13 @@ async function watchToken() {
 
     document.getElementById('connectBtn').onclick = init;
     document.getElementById('mintBtn').onclick = mint;
+    // Прив'язка до кнопок у window.onload
+document.getElementById('disconnectBtn').onclick = disconnect;
 </script>
 
 </body>
 </html>
+
 
 
 
