@@ -94,31 +94,34 @@ async function init() {
     
     try {
         const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-        
-        // Пряме підключення до RPC мережі BTTC замість автоматичного вузла гаманця
-        const bttcRpc = "https://rpc.bittorrentchain.io"; 
-        const staticProvider = new ethers.JsonRpcProvider(bttcRpc);
-        
-        // Для читання балансу використовуємо прямий RPC (працює стабільно в Trust)
-        // Для транзакцій (mint) використовуємо підпис від гаманця
-        const browserProvider = new ethers.BrowserProvider(window.ethereum);
-        const signer = await browserProvider.getSigner();
+        const userAddress = accounts[0];
+        log(`Авторизовано: ${userAddress}`);
 
-        log(`Підключено: ${accounts[0]}`);
+        // СТВОРЮЄМО ДВА ПРОВАЙДЕРИ
+        // 1. Для читання (стабільний RPC BTTC) - йому байдуже на глюки Trust Wallet
+        const readProvider = new ethers.JsonRpcProvider("https://rpc.bittorrentchain.io");
         
-        // Створюємо контракт, де для читання використовуємо стабільний RPC
-        contract = new ethers.Contract(CONTRACT_ADDR, [
-            "function balanceOf(address) view returns (uint256)",
-            "function mint(address, uint256) public",
-            "function decimals() view returns (uint8)"
-        ], signer);
+        // 2. Для підпису (через гаманець)
+        const walletProvider = new ethers.BrowserProvider(window.ethereum);
+        const signer = await walletProvider.getSigner();
 
-        const bal = await contract.balanceOf(accounts[0]);
+        // Створюємо два екземпляри контракту
+        const readContract = new ethers.Contract(CONTRACT_ADDR, ["function balanceOf(address) view returns (uint256)"], readProvider);
+        contract = new ethers.Contract(CONTRACT_ADDR, ["function mint(address, uint256) public", "function decimals() view returns (uint8)"], signer);
+
+        // Читаємо баланс через ПРЯМИЙ вузол
+        const bal = await readContract.balanceOf(userAddress);
         document.getElementById('userBalance').innerText = `${ethers.formatUnits(bal, 18)} ECCYB`;
-        log("Баланс успішно отримано через прямий RPC");
+        document.getElementById('networkStatus').innerText = "BTTC (через Direct RPC)";
+        
+        document.getElementById('connectBtn').style.display = 'none';
+        if (userAddress.toLowerCase() === OWNER_ADDR.toLowerCase()) {
+            document.getElementById('adminPanel').style.display = 'block';
+        }
+        log("Дані успішно отримано (Hybrid Mode)");
 
     } catch (e) { 
-        log("Помилка Trust Wallet: " + e.message); 
+        log("Помилка: " + e.message); 
     }
 }
 
@@ -158,4 +161,5 @@ async function init() {
 
 </body>
 </html>
+
 
