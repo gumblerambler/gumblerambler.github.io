@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ECCYB - Persistent Academic Ledger</title>
+    <title>ECCYB Project - IT Department ZIEIT</title>
     <script src="https://unpkg.com/ethers@6.7.0/dist/ethers.umd.min.js"></script>
     <style>
         :root {
@@ -41,7 +41,8 @@
             align-items: flex-end;
         }
 
-        h1, h3 { color: var(--academic-blue); margin: 0; text-transform: uppercase; }
+        h1 { color: var(--academic-blue); margin: 0; text-transform: uppercase; font-size: 1.8em; }
+        h3 { color: var(--academic-blue); margin: 0; text-transform: uppercase; font-size: 1.1em; }
 
         .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
 
@@ -78,19 +79,19 @@
 <div class="container">
     <header>
         <div>
-            <h1>Academic Ledger System</h1>
-            <p style="margin:5px 0;">Persistent Decentralized Registry • ZIEIT Economic Cybernetics</p>
+            <h1>ECCYB Project</h1>
+            <p style="margin:5px 0;">IT Department • ZIEIT University</p>
         </div>
         <button id="connectBtn" class="btn">Connect Session</button>
     </header>
 
     <div class="grid">
         <div class="metric-card">
-            <span class="metric-label">Available Balance (ECCYB)</span>
+            <span class="metric-label">Account Balance (ECCYB)</span>
             <div id="userBalance" class="metric-value">0.00</div>
         </div>
         <div class="metric-card">
-            <span class="metric-label">Network Fee Asset (BTT)</span>
+            <span class="metric-label">Network Gas (BTT)</span>
             <div id="bttBalance" class="metric-value">0.0000</div>
         </div>
         <div class="metric-card">
@@ -119,10 +120,10 @@
     </div>
 
     <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 30px;">
-        <h3>Historical Transaction Registry</h3>
+        <h3>Transaction Registry</h3>
         <div>
             <button id="exportBtn" class="btn" style="background:#555; font-size:0.8em;">Export CSV</button>
-            <button id="clearBtn" class="btn btn-clear">Clear Session</button>
+            <button id="clearBtn" class="btn btn-clear">Clear Records</button>
         </div>
     </div>
     
@@ -138,7 +139,7 @@
         <tbody></tbody>
     </table>
 
-    <div id="terminal">System initialized. Awaiting user authorization...</div>
+    <div id="terminal">System Core Ready...</div>
 </div>
 
 <script>
@@ -152,23 +153,20 @@
         t.scrollTop = t.scrollHeight;
     };
 
-    // SESSION PERSISTENCE LOGIC
     function saveToSession(entry) {
-        let sessionData = JSON.parse(localStorage.getItem('zieit_session_logs') || '[]');
+        let sessionData = JSON.parse(localStorage.getItem('eccyb_logs') || '[]');
         sessionData.push(entry);
-        localStorage.setItem('zieit_session_logs', JSON.stringify(sessionData));
+        localStorage.setItem('eccyb_logs', JSON.stringify(sessionData));
         renderRegistry();
     }
 
     function renderRegistry() {
         const tbody = document.querySelector("#historyTable tbody");
-        const logs = JSON.parse(localStorage.getItem('zieit_session_logs') || '[]');
-        
+        const logs = JSON.parse(localStorage.getItem('eccyb_logs') || '[]');
         if (logs.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#777;">No local session records found.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#777;">No local records.</td></tr>';
             return;
         }
-
         tbody.innerHTML = logs.slice().reverse().map(e => `
             <tr>
                 <td>${e.date}</td>
@@ -179,11 +177,25 @@
         `).join('');
     }
 
-    async function init() {
-        if (!window.ethereum) return alert("MetaMask not detected.");
+    async function updateMetrics(address) {
+        if (!contract) return;
+        const bal = await contract.balanceOf(address);
+        document.getElementById('userBalance').innerText = parseFloat(ethers.formatUnits(bal, 18)).toFixed(2);
+        const bttWei = await provider.getBalance(address);
+        document.getElementById('bttBalance').innerText = parseFloat(ethers.formatEther(bttWei)).toFixed(4);
+    }
+
+    async function init(auto = false) {
+        if (!window.ethereum) return;
+        
         try {
-            const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
             provider = new ethers.BrowserProvider(window.ethereum);
+            const accounts = auto 
+                ? await provider.listAccounts() 
+                : await window.ethereum.request({ method: 'eth_requestAccounts' });
+
+            if (accounts.length === 0 && auto) return;
+
             signer = await provider.getSigner();
             const address = await signer.getAddress();
             
@@ -199,28 +211,21 @@
 
             if (address.toLowerCase() === OWNER_ADDR.toLowerCase()) {
                 document.getElementById('adminPanel').style.display = 'block';
-                log("Administrative access confirmed.");
             }
             
             await updateMetrics(address);
-            log(`Session authorized for ${address.substring(0,12)}...`);
-        } catch (e) { log(`Connection Error: ${e.message}`); }
-    }
-
-    async function updateMetrics(address) {
-        const bal = await contract.balanceOf(address);
-        document.getElementById('userBalance').innerText = parseFloat(ethers.formatUnits(bal, 18)).toFixed(2);
-        const bttWei = await provider.getBalance(address);
-        document.getElementById('bttBalance').innerText = parseFloat(ethers.formatEther(bttWei)).toFixed(4);
+            renderRegistry();
+            log(`Session active: ${address.substring(0,10)}...`);
+        } catch (e) { if(!auto) log(`Auth Error: ${e.message}`); }
     }
 
     async function handleTransaction(type, targetField, amountField) {
         const target = document.getElementById(targetField).value;
         const amount = document.getElementById(amountField).value;
-        if (!target || !amount) return alert("Please fill all fields.");
+        if (!target || !amount) return alert("Empty fields detected.");
 
         try {
-            log(`Initiating ${type} sequence...`);
+            log(`Processing ${type}...`);
             let tx;
             const weiValue = ethers.parseUnits(amount, 18);
 
@@ -228,46 +233,33 @@
             else if (type === 'BURN') tx = await contract.burn(target, weiValue);
             else if (type === 'TRANSFER') tx = await contract.transfer(target, weiValue);
 
-            const receipt = await tx.wait();
-            log(`${type} confirmed in block ${receipt.blockNumber}`);
-            
-            saveToSession({
-                date: new Date().toLocaleString(),
-                type: type,
-                hash: tx.hash,
-                value: amount
-            });
-
+            await tx.wait();
+            saveToSession({ date: new Date().toLocaleString(), type, hash: tx.hash, value: amount });
             await updateMetrics(await signer.getAddress());
-        } catch (e) { log(`Transaction failed: ${e.message}`); }
+            log(`${type} Successful.`);
+        } catch (e) { log(`Failed: ${e.message}`); }
     }
 
-    function exportCSV() {
-        const logs = JSON.parse(localStorage.getItem('zieit_session_logs') || '[]');
-        if (logs.length === 0) return alert("Registry is empty.");
-        let csv = "Date,Type,Hash,Value\n" + logs.map(e => `${e.date},${e.type},${e.hash},${e.value}`).join("\n");
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = 'ZIEIT_Academic_Ledger.csv';
-        a.click();
-    }
-
-    // EVENT LISTENERS
-    document.getElementById('connectBtn').onclick = init;
+    document.getElementById('connectBtn').onclick = () => init(false);
     document.getElementById('mintBtn').onclick = () => handleTransaction('MINT', 'adminTarget', 'adminAmt');
     document.getElementById('burnBtn').onclick = () => handleTransaction('BURN', 'adminTarget', 'adminAmt');
     document.getElementById('transferBtn').onclick = () => handleTransaction('TRANSFER', 'transferTarget', 'transferAmt');
-    document.getElementById('exportBtn').onclick = exportCSV;
+    document.getElementById('exportBtn').onclick = () => {
+        const logs = JSON.parse(localStorage.getItem('eccyb_logs') || '[]');
+        let csv = "Date,Type,Hash,Value\n" + logs.map(e => `${e.date},${e.type},${e.hash},${e.value}`).join("\n");
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+        a.download = 'ECCYB_Report.csv'; a.click();
+    };
     document.getElementById('clearBtn').onclick = () => {
-        if(confirm("Clear all local session records?")) {
-            localStorage.removeItem('zieit_session_logs');
-            renderRegistry();
-            log("Session records cleared.");
-        }
+        if(confirm("Delete records?")) { localStorage.removeItem('eccyb_logs'); renderRegistry(); }
     };
 
-    window.onload = renderRegistry;
+    // Auto-init session if already connected
+    window.onload = () => {
+        renderRegistry();
+        init(true);
+    };
 </script>
 </body>
 </html>
