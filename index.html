@@ -41,23 +41,22 @@
             align-items: flex-end;
         }
 
+        .lang-switch { margin-bottom: 10px; text-align: right; }
+        .lang-btn { background: none; border: 1px solid var(--border-color); cursor: pointer; padding: 2px 8px; font-size: 0.8em; }
+        .lang-btn.active { background: var(--academic-blue); color: white; border-color: var(--academic-blue); }
+
         h1 { color: var(--academic-blue); margin: 0; text-transform: uppercase; font-size: 1.8em; }
-        h3 { color: var(--academic-blue); margin: 0; text-transform: uppercase; font-size: 1.1em; }
+        p.dept { margin: 5px 0; font-style: italic; }
 
         .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
-
         .metric-card { border: 1px solid var(--border-color); padding: 15px; background: var(--academic-gray); }
-
         .metric-label { font-variant: small-caps; font-weight: bold; font-size: 0.85em; display: block; border-bottom: 1px solid var(--border-color); margin-bottom: 10px; padding-bottom: 5px; }
-
         .metric-value { font-family: Arial, sans-serif; font-size: 1.4em; font-weight: bold; }
 
         .panel { border: 1px solid var(--academic-blue); padding: 20px; margin: 20px 0; background-color: #fafafa; }
-
         .panel-header { font-weight: bold; font-size: 0.9em; color: var(--academic-blue); margin-bottom: 15px; border-bottom: 1px double #ccc; }
 
         .input-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
-
         input { padding: 10px; border: 1px solid var(--border-color); flex: 1; font-family: Arial, sans-serif; min-width: 250px; }
 
         .btn { border: none; padding: 10px 25px; cursor: pointer; font-variant: small-caps; font-weight: bold; color: white; transition: 0.2s; background-color: var(--academic-blue); }
@@ -65,87 +64,143 @@
         .btn-mint { background-color: var(--success-color); }
         .btn-burn { background-color: var(--danger-color); }
         .btn-transfer { background-color: var(--accent-blue); }
-        .btn-clear { background-color: #777; font-size: 0.75em; }
 
         table { width: 100%; border-collapse: collapse; margin-top: 15px; font-family: Arial, sans-serif; font-size: 0.8em; }
         th, td { border: 1px solid var(--border-color); padding: 10px; text-align: left; }
         th { background-color: var(--academic-gray); font-variant: small-caps; }
 
-        #terminal { background-color: #1a1a1a; color: #00ff41; padding: 12px; font-family: "Courier New", monospace; font-size: 0.85em; height: 120px; overflow-y: auto; margin-top: 20px; border: 1px inset #000; }
+        #terminal { background-color: #1a1a1a; color: #00ff41; padding: 12px; font-family: "Courier New", monospace; font-size: 0.85em; height: 100px; overflow-y: auto; margin-top: 20px; border: 1px inset #000; }
     </style>
 </head>
 <body>
 
 <div class="container">
+    <div class="lang-switch">
+        <button onclick="setLang('en')" id="btn-en" class="lang-btn active">EN</button>
+        <button onclick="setLang('ua')" id="btn-ua" class="lang-btn">UA</button>
+    </div>
+
     <header>
         <div>
-            <h1>ECCYB Project</h1>
-            <p style="margin:5px 0;">IT Department • ZIEIT University</p>
+            <h1 id="t-title">ECCYB Project</h1>
+            <p id="t-dept" class="dept">IT Department • ZIEIT University</p>
         </div>
         <button id="connectBtn" class="btn">Connect Session</button>
     </header>
 
     <div class="grid">
         <div class="metric-card">
-            <span class="metric-label">Account Balance (ECCYB)</span>
+            <span class="metric-label" id="t-bal-token">Account Balance (ECCYB)</span>
             <div id="userBalance" class="metric-value">0.00</div>
         </div>
         <div class="metric-card">
-            <span class="metric-label">Network Gas (BTT)</span>
+            <span class="metric-label" id="t-bal-gas">Network Gas (BTT)</span>
             <div id="bttBalance" class="metric-value">0.0000</div>
         </div>
         <div class="metric-card">
-            <span class="metric-label">Node Integrity</span>
+            <span class="metric-label" id="t-node">Node Integrity</span>
             <div id="networkStatus" class="metric-value">Offline</div>
         </div>
     </div>
 
     <div id="adminPanel" class="panel" style="display: none;">
-        <div class="panel-header">FACULTY MONETARY POLICY (RESTRICTED ACCESS)</div>
+        <div class="panel-header" id="t-admin-hdr">FACULTY MONETARY POLICY (RESTRICTED)</div>
         <div class="input-row">
             <input type="text" id="adminTarget" placeholder="Target Address (0x...)">
             <input type="number" id="adminAmt" step="0.01" placeholder="Amount">
-            <button id="mintBtn" class="btn btn-mint">Mint (Issue)</button>
-            <button id="burnBtn" class="btn btn-burn">Burn (Revoke)</button>
+            <button id="mintBtn" class="btn btn-mint">Mint</button>
+            <button id="burnBtn" class="btn btn-burn">Burn</button>
         </div>
     </div>
 
     <div class="panel">
-        <div class="panel-header">PEER-TO-PEER ASSET TRANSFER</div>
+        <div class="panel-header" id="t-user-hdr">ASSET TRANSFER (P2P)</div>
         <div class="input-row">
             <input type="text" id="transferTarget" placeholder="Recipient Address (0x...)">
             <input type="number" id="transferAmt" step="0.01" placeholder="Amount">
-            <button id="transferBtn" class="btn btn-transfer">Execute Transfer</button>
+            <button id="transferBtn" class="btn btn-transfer">Transfer</button>
         </div>
     </div>
 
     <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 30px;">
-        <h3>Transaction Registry</h3>
+        <h3 id="t-reg-title">Transaction Registry</h3>
         <div>
             <button id="exportBtn" class="btn" style="background:#555; font-size:0.8em;">Export CSV</button>
-            <button id="clearBtn" class="btn btn-clear">Clear Records</button>
+            <button id="clearBtn" class="btn" style="background:#777; font-size:0.8em;">Clear Records</button>
         </div>
     </div>
     
     <table id="historyTable">
         <thead>
             <tr>
-                <th>Date/Time</th>
-                <th>Operation</th>
-                <th>Hash Reference</th>
-                <th>Value (ECCYB)</th>
+                <th id="th-date">Date/Time</th>
+                <th id="th-op">Operation</th>
+                <th id="th-hash">Hash Reference</th>
+                <th id="th-val">Value (ECCYB)</th>
             </tr>
         </thead>
         <tbody></tbody>
     </table>
 
-    <div id="terminal">System Core Ready...</div>
+    <div id="terminal">System Ready...</div>
 </div>
 
 <script>
     const CONTRACT_ADDR = "0x4aa97493d7c8e570a548549222d21e91aa6c60ca";
     const OWNER_ADDR = "0xf08b28c6d8a26cd1a24d1dbc95c89005f1e04ead";
-    let provider, signer, contract;
+    let provider, signer, contract, currentLang = 'en';
+
+    const translations = {
+        en: {
+            title: "ECCYB Project", dept: "IT Department • ZIEIT University",
+            connect: "Connect Session", bal_token: "Account Balance (ECCYB)",
+            bal_gas: "Network Gas (BTT)", node: "Node Integrity",
+            admin_hdr: "FACULTY MONETARY POLICY (RESTRICTED)",
+            user_hdr: "ASSET TRANSFER (P2P)", reg_title: "Transaction Registry",
+            th_date: "Date/Time", th_op: "Operation", th_hash: "Hash Reference", th_val: "Value (ECCYB)",
+            mint: "Mint", burn: "Burn", transfer: "Transfer",
+            clear: "Clear Records", export: "Export CSV", offline: "Offline"
+        },
+        ua: {
+            title: "Проєкт ECCYB", dept: "Кафедра ІТ • ЗІЕІТ",
+            connect: "Авторизувати сесію", bal_token: "Баланс рахунку (ECCYB)",
+            bal_gas: "Паливо мережі (BTT)", node: "Статус вузла",
+            admin_hdr: "МОНЕТАРНА ПОЛІТИКА КАФЕДРИ (RESTRICTED)",
+            user_hdr: "ПЕРЕКАЗ АКТИВІВ (P2P)", reg_title: "Реєстр транзакцій",
+            th_date: "Дата/Час", th_op: "Операція", th_hash: "Хеш-посилання", th_val: "Значення (ECCYB)",
+            mint: "Емісія", burn: "Спалення", transfer: "Переказ",
+            clear: "Очистити реєстр", export: "Експорт CSV", offline: "Поза мережею"
+        }
+    };
+
+    function setLang(lang) {
+        currentLang = lang;
+        document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+        document.getElementById('btn-ua').classList.toggle('active', lang === 'ua');
+        const t = translations[lang];
+        document.getElementById('t-title').innerText = t.title;
+        document.getElementById('t-dept').innerText = t.dept;
+        document.getElementById('connectBtn').innerText = t.connect;
+        document.getElementById('t-bal-token').innerText = t.bal_token;
+        document.getElementById('t-bal-gas').innerText = t.bal_gas;
+        document.getElementById('t-node').innerText = t.node;
+        document.getElementById('t-admin-hdr').innerText = t.admin_hdr;
+        document.getElementById('t-user-hdr').innerText = t.user_hdr;
+        document.getElementById('t-reg-title').innerText = t.reg_title;
+        document.getElementById('th-date').innerText = t.th_date;
+        document.getElementById('th-op').innerText = t.th_op;
+        document.getElementById('th-hash').innerText = t.th_hash;
+        document.getElementById('th-val').innerText = t.th_val;
+        document.getElementById('mintBtn').innerText = t.mint;
+        document.getElementById('burnBtn').innerText = t.burn;
+        document.getElementById('transferBtn').innerText = t.transfer;
+        document.getElementById('clearBtn').innerText = t.clear;
+        document.getElementById('exportBtn').innerText = t.export;
+        if (document.getElementById('networkStatus').innerText === "Offline" || document.getElementById('networkStatus').innerText === "Поза мережею") {
+            document.getElementById('networkStatus').innerText = t.offline;
+        }
+        renderRegistry();
+    }
 
     const log = (msg) => {
         const t = document.getElementById('terminal');
@@ -153,18 +208,11 @@
         t.scrollTop = t.scrollHeight;
     };
 
-    function saveToSession(entry) {
-        let sessionData = JSON.parse(localStorage.getItem('eccyb_logs') || '[]');
-        sessionData.push(entry);
-        localStorage.setItem('eccyb_logs', JSON.stringify(sessionData));
-        renderRegistry();
-    }
-
     function renderRegistry() {
         const tbody = document.querySelector("#historyTable tbody");
         const logs = JSON.parse(localStorage.getItem('eccyb_logs') || '[]');
         if (logs.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#777;">No local records.</td></tr>';
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#777;">${currentLang === 'en' ? 'No records' : 'Записи відсутні'}</td></tr>`;
             return;
         }
         tbody.innerHTML = logs.slice().reverse().map(e => `
@@ -187,18 +235,13 @@
 
     async function init(auto = false) {
         if (!window.ethereum) return;
-        
         try {
             provider = new ethers.BrowserProvider(window.ethereum);
-            const accounts = auto 
-                ? await provider.listAccounts() 
-                : await window.ethereum.request({ method: 'eth_requestAccounts' });
-
-            if (accounts.length === 0 && auto) return;
+            const accounts = auto ? await provider.listAccounts() : await window.ethereum.request({ method: 'eth_requestAccounts' });
+            if (accounts.length === 0) return;
 
             signer = await provider.getSigner();
             const address = await signer.getAddress();
-            
             document.getElementById('networkStatus').innerText = "BTTC Mainnet";
             document.getElementById('connectBtn').style.display = 'none';
 
@@ -209,34 +252,30 @@
                 "function transfer(address, uint256) public returns (bool)"
             ], signer);
 
-            if (address.toLowerCase() === OWNER_ADDR.toLowerCase()) {
-                document.getElementById('adminPanel').style.display = 'block';
-            }
-            
+            if (address.toLowerCase() === OWNER_ADDR.toLowerCase()) document.getElementById('adminPanel').style.display = 'block';
             await updateMetrics(address);
-            renderRegistry();
-            log(`Session active: ${address.substring(0,10)}...`);
-        } catch (e) { if(!auto) log(`Auth Error: ${e.message}`); }
+            log(`Active session: ${address.substring(0,10)}...`);
+        } catch (e) { if(!auto) log(`Error: ${e.message}`); }
     }
 
-    async function handleTransaction(type, targetField, amountField) {
-        const target = document.getElementById(targetField).value;
-        const amount = document.getElementById(amountField).value;
-        if (!target || !amount) return alert("Empty fields detected.");
-
+    async function handleTransaction(type, targetF, amountF) {
+        const target = document.getElementById(targetF).value;
+        const amount = document.getElementById(amountF).value;
+        if (!target || !amount) return;
         try {
             log(`Processing ${type}...`);
             let tx;
-            const weiValue = ethers.parseUnits(amount, 18);
-
-            if (type === 'MINT') tx = await contract.mint(target, weiValue);
-            else if (type === 'BURN') tx = await contract.burn(target, weiValue);
-            else if (type === 'TRANSFER') tx = await contract.transfer(target, weiValue);
-
+            const val = ethers.parseUnits(amount, 18);
+            if (type === 'MINT') tx = await contract.mint(target, val);
+            else if (type === 'BURN') tx = await contract.burn(target, val);
+            else if (type === 'TRANSFER') tx = await contract.transfer(target, val);
             await tx.wait();
-            saveToSession({ date: new Date().toLocaleString(), type, hash: tx.hash, value: amount });
+            let sessionData = JSON.parse(localStorage.getItem('eccyb_logs') || '[]');
+            sessionData.push({ date: new Date().toLocaleString(), type, hash: tx.hash, value: amount });
+            localStorage.setItem('eccyb_logs', JSON.stringify(sessionData));
             await updateMetrics(await signer.getAddress());
-            log(`${type} Successful.`);
+            renderRegistry();
+            log(`${type} Success.`);
         } catch (e) { log(`Failed: ${e.message}`); }
     }
 
@@ -244,22 +283,16 @@
     document.getElementById('mintBtn').onclick = () => handleTransaction('MINT', 'adminTarget', 'adminAmt');
     document.getElementById('burnBtn').onclick = () => handleTransaction('BURN', 'adminTarget', 'adminAmt');
     document.getElementById('transferBtn').onclick = () => handleTransaction('TRANSFER', 'transferTarget', 'transferAmt');
+    document.getElementById('clearBtn').onclick = () => { if(confirm("Clear?")) { localStorage.removeItem('eccyb_logs'); renderRegistry(); }};
     document.getElementById('exportBtn').onclick = () => {
         const logs = JSON.parse(localStorage.getItem('eccyb_logs') || '[]');
         let csv = "Date,Type,Hash,Value\n" + logs.map(e => `${e.date},${e.type},${e.hash},${e.value}`).join("\n");
         const a = document.createElement('a');
         a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
-        a.download = 'ECCYB_Report.csv'; a.click();
-    };
-    document.getElementById('clearBtn').onclick = () => {
-        if(confirm("Delete records?")) { localStorage.removeItem('eccyb_logs'); renderRegistry(); }
+        a.download = 'ECCYB_Project_Report.csv'; a.click();
     };
 
-    // Auto-init session if already connected
-    window.onload = () => {
-        renderRegistry();
-        init(true);
-    };
+    window.onload = () => { setLang('en'); init(true); };
 </script>
 </body>
 </html>
