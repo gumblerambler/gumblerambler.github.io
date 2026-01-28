@@ -107,6 +107,7 @@
             height: 120px;
             overflow-y: auto;
             margin-top: 30px;
+            border-radius: 4px;
         }
     </style>
 </head>
@@ -114,57 +115,57 @@
 
 <div class="container">
     <div class="lang-switch">
-        <button class="lang-btn active" onclick="setLang('ua')">UA</button>
-        <button class="lang-btn" onclick="setLang('en')">EN</button>
+        <button class="lang-btn active" id="btn-en" onclick="setLang('en')">EN</button>
+        <button class="lang-btn" id="btn-ua" onclick="setLang('ua')">UA</button>
     </div>
 
     <header>
         <h1 data-key="title">ECCYB System</h1>
-        <div class="subtitle" data-key="subtitle">Цифрова економіка та інформаційні технології | BTTC Network</div>
+        <div class="subtitle" data-key="subtitle">Digital Economy & Information Technologies | BTTC Network</div>
     </header>
 
     <div id="authSection">
-        <button class="main-btn" id="connectBtn" data-key="connectBtn">Ініціалізувати сесію (MetaMask)</button>
+        <button class="main-btn" id="connectBtn" data-key="connectBtn">Initialize Session (MetaMask)</button>
     </div>
 
     <div id="mainUI" style="display:none;">
         <div class="balance-card">
-            <div id="accountType" data-key="accType" style="font-size: 0.7rem; font-weight: bold; color: #777;">ОБЛІКОВИЙ ЗАПИС</div>
+            <div id="accountType" data-key="accType" style="font-size: 0.7rem; font-weight: bold; color: #777;">ACCOUNT TYPE</div>
             <div id="userBalance">-- ECCYB</div>
             <div id="userAddr" style="font-size: 0.7rem; font-family: monospace; color: #999;"></div>
         </div>
 
         <div class="panel">
-            <h3 data-key="transferTitle">Внутрішній переказ (Transfer)</h3>
+            <h3 data-key="transferTitle">Internal Asset Transfer</h3>
             <div class="input-group">
-                <label data-key="labelAddr">Адреса отримувача</label>
+                <label data-key="labelAddr">Recipient Address</label>
                 <input type="text" id="targetAddr" placeholder="0x...">
             </div>
             <div class="input-group">
-                <label data-key="labelAmt">Сума токенів</label>
+                <label data-key="labelAmt">Token Amount</label>
                 <input type="number" id="targetAmount" placeholder="0.00">
             </div>
-            <button class="main-btn" id="sendBtn" data-key="sendBtn">Виконати транзакцію</button>
+            <button class="main-btn" id="sendBtn" data-key="sendBtn">Execute Transaction</button>
         </div>
 
         <div id="adminPanel" class="panel" style="display:none; border-color: #a3c1ad;">
-            <h3 data-key="adminTitle">Управління емісією (Administrator)</h3>
+            <h3 data-key="adminTitle">Emission Management (Administrator)</h3>
             <div class="input-group">
-                <label data-key="labelMint">Обсяг емісії (Mint)</label>
+                <label data-key="labelMint">Minting Volume</label>
                 <input type="number" id="mintAmount" placeholder="Amount">
-                <button class="btn-outline" id="mintBtn" data-key="mintBtn">Активувати емісію</button>
+                <button class="btn-outline" id="mintBtn" data-key="mintBtn">Activate Emission</button>
             </div>
             <div class="input-group" style="margin-top:20px;">
-                <label data-key="labelBurn">Вилучення з обігу (Burn)</label>
+                <label data-key="labelBurn">Asset Destruction (Burn)</label>
                 <input type="number" id="burnAmount" placeholder="Amount">
-                <button class="btn-burn" id="burnBtn" data-key="burnBtn">Спалити токени</button>
+                <button class="btn-burn" id="burnBtn" data-key="burnBtn">Burn Tokens</button>
             </div>
         </div>
 
-        <button class="btn-outline" id="disconnectBtn" data-key="exitBtn" style="margin-top: 20px;">Завершити сесію</button>
+        <button class="btn-outline" id="disconnectBtn" data-key="exitBtn" style="margin-top: 20px;">Terminate Session</button>
     </div>
 
-    <div id="console" data-key="consoleInit">Система очікує підключення...</div>
+    <div id="console" data-key="consoleInit">System awaiting blockchain connection...</div>
 </div>
 
 <script>
@@ -172,6 +173,31 @@
     const OWNER_ADDR = "0xf08b28c6d8a26cd1a24d1dbc95c89005f1e04ead";
     
     const i18n = {
+        en: {
+            title: "ECCYB System",
+            subtitle: "Digital Economy & Information Technologies | BTTC Network",
+            connectBtn: "Initialize Session (MetaMask)",
+            accType: "ACCOUNT TYPE",
+            accAdmin: "ADMINISTRATIVE ACCESS",
+            accStudent: "STUDENT ACCESS",
+            transferTitle: "Internal Asset Transfer",
+            labelAddr: "Recipient Address",
+            labelAmt: "Token Amount",
+            sendBtn: "Execute Transaction",
+            adminTitle: "Emission Management (Administrator)",
+            labelMint: "Minting Volume",
+            mintBtn: "Activate Emission",
+            labelBurn: "Asset Destruction (Burn)",
+            burnBtn: "Burn Tokens",
+            exitBtn: "Terminate Session",
+            consoleInit: "System awaiting blockchain connection...",
+            logConn: "Session initialized for ",
+            logWait: "Transaction processing...",
+            logSuccess: "Transaction successfully confirmed.",
+            logMint: "Asset emission request...",
+            logBurn: "Asset destruction request...",
+            viewScan: "View on BTTScan"
+        },
         ua: {
             title: "ECCYB System",
             subtitle: "Цифрова економіка та інформаційні технології | BTTC Network",
@@ -196,35 +222,10 @@
             logMint: "Запит на емісію активів...",
             logBurn: "Запит на деструкцію токенів...",
             viewScan: "Переглянути в BTTScan"
-        },
-        en: {
-            title: "ECCYB System",
-            subtitle: "Digital Economy & Information Technologies | BTTC Network",
-            connectBtn: "Initialize Session (MetaMask)",
-            accType: "ACCOUNT TYPE",
-            accAdmin: "ADMINISTRATIVE ACCESS",
-            accStudent: "STUDENT ACCESS",
-            transferTitle: "Internal Asset Transfer",
-            labelAddr: "Recipient Address",
-            labelAmt: "Token Amount",
-            sendBtn: "Execute Transaction",
-            adminTitle: "Emission Management (Administrator)",
-            labelMint: "Minting Volume",
-            mintBtn: "Activate Emission",
-            labelBurn: "Asset Destruction (Burn)",
-            burnBtn: "Burn Tokens",
-            exitBtn: "Terminate Session",
-            consoleInit: "System awaiting connection...",
-            logConn: "Session initialized for ",
-            logWait: "Transaction processing...",
-            logSuccess: "Transaction successfully confirmed.",
-            logMint: "Asset emission request...",
-            logBurn: "Asset destruction request...",
-            viewScan: "View on BTTScan"
         }
     };
 
-    let currentLang = 'en';
+    let currentLang = 'en'; // English set as default
     let signer, contract, userAddress;
 
     function setLang(lang) {
@@ -233,7 +234,8 @@
             const key = el.getAttribute('data-key');
             if (i18n[lang][key]) el.innerText = i18n[lang][key];
         });
-        document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.toggle('active', btn.innerText.toLowerCase() === lang));
+        document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+        document.getElementById('btn-ua').classList.toggle('active', lang === 'ua');
     }
 
     const log = (msgKey, hash = null) => {
@@ -280,7 +282,7 @@
 
     async function handleTx(action, method, ...args) {
         try {
-            log(i18n[currentLang][action]);
+            log(i18n[currentLang][action] || action);
             const tx = await contract[method](...args);
             log("logWait", tx.hash);
             await tx.wait();
@@ -305,8 +307,8 @@
     };
     document.getElementById('disconnectBtn').onclick = () => location.reload();
 
+    // Initial call to set default language labels
+    setLang('en');
 </script>
 </body>
 </html>
-
-
