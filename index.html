@@ -201,4 +201,114 @@
         ua: {
             title: "ECCYB System",
             subtitle: "Цифрова економіка та інформаційні технології | BTTC Network",
-            connectBtn: "Ініціалізувати
+            connectBtn: "Ініціалізувати сесію (MetaMask)",
+            accType: "ОБЛІКОВИЙ ЗАПИС",
+            accAdmin: "АДМІНІСТРАТИВНИЙ ДОСТУП",
+            accStudent: "СТУДЕНТСЬКИЙ ДОСТУП",
+            transferTitle: "Внутрішній переказ (Transfer)",
+            labelAddr: "Адреса отримувача",
+            labelAmt: "Сума токенів",
+            sendBtn: "Виконати транзакцію",
+            adminTitle: "Управління емісією (Administrator)",
+            labelMint: "Обсяг емісії (Mint)",
+            mintBtn: "Активувати емісію",
+            labelBurn: "Вилучення з обігу (Burn)",
+            burnBtn: "Спалити токени",
+            exitBtn: "Завершити сесію",
+            consoleInit: "Система очікує підключення...",
+            logConn: "Сесію ініціалізовано для ",
+            logWait: "Транзакція в обробці...",
+            logSuccess: "Транзакція успішно підтвержена.",
+            logMint: "Запит на емісію активів...",
+            logBurn: "Запит на деструкцію токенів...",
+            viewScan: "Переглянути в BTTScan"
+        }
+    };
+
+    let currentLang = 'en'; 
+    let signer, contract, userAddress;
+
+    function setLang(lang) {
+        currentLang = lang;
+        document.querySelectorAll('[data-key]').forEach(el => {
+            const key = el.getAttribute('data-key');
+            if (i18n[lang][key]) el.innerText = i18n[lang][key];
+        });
+        document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+        document.getElementById('btn-ua').classList.toggle('active', lang === 'ua');
+    }
+
+    const log = (msgKey, hash = null) => {
+        const c = document.getElementById('console');
+        const msg = i18n[currentLang][msgKey] || msgKey;
+        let html = `> ${msg}`;
+        if (hash) {
+            html += ` <br><small>TX: <a href="https://bttcscan.com/tx/${hash}" target="_blank" style="color: #a3c1ad;">${i18n[currentLang].viewScan}</a></small>`;
+        }
+        c.innerHTML = html + `<br>` + c.innerHTML;
+    };
+
+    async function syncData() {
+        const bal = await contract.balanceOf(userAddress);
+        // Rounding for clear academic display
+        document.getElementById('userBalance').innerText = `${Math.floor(Number(ethers.formatUnits(bal, 18)))} ECCYB`;
+    }
+
+    async function connect() {
+        if (!window.ethereum) return alert("MetaMask not found");
+        try {
+            const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+            userAddress = accounts[0];
+            const provider = new ethers.BrowserProvider(window.ethereum);
+            signer = await provider.getSigner();
+            contract = new ethers.Contract(CONTRACT_ADDR, [
+                "function balanceOf(address) view returns (uint256)",
+                "function transfer(address, uint256) public returns (bool)",
+                "function mint(address, uint256) public",
+                "function burn(uint256) public"
+            ], signer);
+
+            document.getElementById('authSection').style.display = 'none';
+            document.getElementById('mainUI').style.display = 'block';
+            document.getElementById('userAddr').innerText = userAddress;
+
+            const isAdmin = userAddress.toLowerCase() === OWNER_ADDR.toLowerCase();
+            document.getElementById('adminPanel').style.display = isAdmin ? 'block' : 'none';
+            document.getElementById('accountType').innerText = i18n[currentLang][isAdmin ? 'accAdmin' : 'accStudent'];
+
+            await syncData();
+            log(i18n[currentLang].logConn + userAddress.substring(0, 8) + "...");
+        } catch (e) { log(e.message); }
+    }
+
+    async function handleTx(action, method, ...args) {
+        try {
+            log(i18n[currentLang][action] || action);
+            const tx = await contract[method](...args);
+            log("logWait", tx.hash);
+            await tx.wait();
+            log("logSuccess");
+            await syncData();
+        } catch (e) { log(e.message); }
+    }
+
+    document.getElementById('connectBtn').onclick = connect;
+    document.getElementById('sendBtn').onclick = () => {
+        const to = document.getElementById('targetAddr').value;
+        const amt = document.getElementById('targetAmount').value;
+        if (ethers.isAddress(to) && amt) handleTx('transferTitle', 'transfer', to, ethers.parseUnits(amt, 18));
+    };
+    document.getElementById('mintBtn').onclick = () => {
+        const amt = document.getElementById('mintAmount').value;
+        if (amt) handleTx('logMint', 'mint', userAddress, ethers.parseUnits(amt, 18));
+    };
+    document.getElementById('burnBtn').onclick = () => {
+        const amt = document.getElementById('burnAmount').value;
+        if (amt) handleTx('logBurn', 'burn', ethers.parseUnits(amt, 18));
+    };
+    document.getElementById('disconnectBtn').onclick = () => location.reload();
+
+    setLang('en');
+</script>
+</body>
+</html>
