@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ECCYB - Academic Ledger (Strict Precision)</title>
+    <title>ECCYB - Academic Financial System</title>
     <script src="https://unpkg.com/ethers@6.7.0/dist/ethers.umd.min.js"></script>
     <style>
         :root {
@@ -13,6 +13,7 @@
             --border-color: #ccc;
             --success-color: #28a745;
             --danger-color: #a4161a;
+            --accent-color: #0056b3;
         }
 
         body {
@@ -24,7 +25,7 @@
         }
 
         .container {
-            max-width: 1000px;
+            max-width: 1050px;
             margin: 0 auto;
             border: 1px solid var(--border-color);
             padding: 30px;
@@ -50,6 +51,8 @@
         .metric-value { font-family: Arial, sans-serif; font-size: 1.3em; font-weight: bold; }
 
         .control-panel { border: 2px solid var(--academic-blue); padding: 20px; margin: 20px 0; background-color: #fcfcfc; }
+        
+        .panel-title { font-weight: bold; color: var(--academic-blue); border-bottom: 1px solid #ddd; margin-bottom: 15px; padding-bottom: 5px; }
 
         .input-group { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
 
@@ -59,6 +62,7 @@
         .btn:hover { opacity: 0.9; }
         .btn-mint { background-color: var(--success-color); }
         .btn-burn { background-color: var(--danger-color); }
+        .btn-transfer { background-color: var(--accent-color); }
         .btn-export { background-color: #555; font-size: 0.8em; }
 
         table { width: 100%; border-collapse: collapse; margin-top: 15px; font-family: Arial, sans-serif; font-size: 0.85em; }
@@ -74,33 +78,42 @@
     <header>
         <div>
             <h1>Academic Ledger System</h1>
-            <p>Monetary Simulation • Economic Cybernetics (ZIEIT)</p>
+            <p>Monetary Policy & Transaction Management • ZIEIT</p>
         </div>
-        <button id="connectBtn" class="btn">Authorize Session</button>
+        <button id="connectBtn" class="btn">Authorize Wallet</button>
     </header>
 
     <div class="grid">
         <div class="metric-card">
-            <span class="metric-label">Circulating ECCYB</span>
+            <span class="metric-label">Account Balance (ECCYB)</span>
             <div id="userBalance" class="metric-value">0.00</div>
         </div>
         <div class="metric-card">
-            <span class="metric-label">Operational BTT</span>
-            <div id="bttBalance" class="metric-value">0.00</div>
+            <span class="metric-label">Network Fuel (BTT)</span>
+            <div id="bttBalance" class="metric-value">0.0000</div>
         </div>
         <div class="metric-card">
-            <span class="metric-label">Ledger Status</span>
-            <div id="networkName" class="metric-value">Offline</div>
+            <span class="metric-label">System Integrity</span>
+            <div id="networkName" class="metric-value">Disconnected</div>
         </div>
     </div>
 
     <div id="adminSection" class="control-panel" style="display: none;">
-        <h3>Monetary Policy Control</h3>
+        <div class="panel-title">FACULTY MANAGEMENT CONSOLE (MINT/BURN)</div>
         <div class="input-group">
-            <input type="text" id="targetAddr" placeholder="Target Address (0x...)">
-            <input type="number" id="tokenAmt" step="0.01" placeholder="Quantity (e.g. 10.50)">
-            <button id="mintBtn" class="btn btn-mint">Issue (Mint)</button>
-            <button id="burnBtn" class="btn btn-burn">Revoke (Burn)</button>
+            <input type="text" id="adminTarget" placeholder="Target Address (0x...)">
+            <input type="number" id="adminAmt" step="0.01" placeholder="Amount">
+            <button id="mintBtn" class="btn btn-mint">Issue Tokens</button>
+            <button id="burnBtn" class="btn btn-burn">Revoke Tokens</button>
+        </div>
+    </div>
+
+    <div class="control-panel">
+        <div class="panel-title">ASSET TRANSFER (PEER-TO-PEER)</div>
+        <div class="input-group">
+            <input type="text" id="transferTarget" placeholder="Recipient Address (0x...)">
+            <input type="number" id="transferAmt" step="0.01" placeholder="Amount to Send">
+            <button id="transferBtn" class="btn btn-transfer">Execute Transfer</button>
         </div>
     </div>
 
@@ -114,8 +127,8 @@
             <tr>
                 <th>Timestamp</th>
                 <th>Operation</th>
-                <th>Hash Reference</th>
-                <th>Amount (ECCYB)</th>
+                <th>Reference Hash</th>
+                <th>Value (ECCYB)</th>
             </tr>
         </thead>
         <tbody></tbody>
@@ -148,11 +161,11 @@
         tbody.innerHTML = logs.reverse().map(e => `
             <tr>
                 <td>${e.time}</td>
-                <td style="color:${e.type === 'MINT' ? 'green' : 'red'}; font-weight:bold;">${e.type}</td>
+                <td style="color:${e.type === 'MINT' ? 'green' : (e.type === 'BURN' ? 'red' : 'blue')}; font-weight:bold;">${e.type}</td>
                 <td><small>${e.hash.substring(0,30)}...</small></td>
                 <td>${parseFloat(e.value).toFixed(2)}</td>
             </tr>
-        `).join('') || '<tr><td colspan="4" style="text-align:center;">No session data found.</td></tr>';
+        `).join('') || '<tr><td colspan="4" style="text-align:center;">No data records available.</td></tr>';
     }
 
     async function init() {
@@ -168,7 +181,8 @@
         contract = new ethers.Contract(CONTRACT_ADDR, [
             "function balanceOf(address) view returns (uint256)",
             "function mint(address, uint256) public",
-            "function burn(address, uint256) public"
+            "function burn(address, uint256) public",
+            "function transfer(address, uint256) public returns (bool)"
         ], signer);
 
         if (address.toLowerCase() === OWNER_ADDR.toLowerCase()) {
@@ -177,51 +191,52 @@
         
         updateMetrics(address);
         renderTable();
-        log("Synchronization complete.");
+        log("Ledger synchronized successfully.");
     }
 
     async function updateMetrics(address) {
         const bal = await contract.balanceOf(address);
-        // Rounding to 2 decimal places for Academic display
         document.getElementById('userBalance').innerText = parseFloat(ethers.formatUnits(bal, 18)).toFixed(2);
-        
         const bttWei = await provider.getBalance(address);
         document.getElementById('bttBalance').innerText = parseFloat(ethers.formatEther(bttWei)).toFixed(4);
     }
 
-    async function handleAction(type) {
-        const to = document.getElementById('targetAddr').value;
-        const amt = document.getElementById('tokenAmt').value;
-        if(!to || !amt) return alert("Fields cannot be empty.");
+    async function handleAction(type, targetId, amtId) {
+        const to = document.getElementById(targetId).value;
+        const amt = document.getElementById(amtId).value;
+        if(!to || !amt) return alert("Required fields missing.");
         
         try {
-            log(`Executing ${type} operation...`);
-            const tx = type === 'MINT' 
-                ? await contract.mint(to, ethers.parseUnits(amt, 18))
-                : await contract.burn(to, ethers.parseUnits(amt, 18));
+            log(`Initiating ${type} sequence...`);
+            let tx;
+            const parsedAmt = ethers.parseUnits(amt, 18);
+            
+            if (type === 'MINT') tx = await contract.mint(to, parsedAmt);
+            else if (type === 'BURN') tx = await contract.burn(to, parsedAmt);
+            else if (type === 'TRANSFER') tx = await contract.transfer(to, parsedAmt);
             
             await tx.wait();
             saveSession({ time: new Date().toLocaleString(), type, hash: tx.hash, value: amt });
             updateMetrics(await signer.getAddress());
-            log(`${type} Sequence Success.`);
-        } catch (e) { log(`Error: ${e.message}`); }
+            log(`${type} Operation Confirmed.`);
+        } catch (e) { log(`System Error: ${e.message}`); }
     }
 
     function exportCSV() {
         let logs = JSON.parse(localStorage.getItem('eccyb_logs') || '[]');
-        if(logs.length === 0) return alert("Empty registry.");
-        // Ensure values in CSV are formatted correctly
+        if(logs.length === 0) return alert("Nothing to export.");
         let csv = "Timestamp,Operation,Hash,Amount\n" + logs.map(e => `${e.time},${e.type},${e.hash},${parseFloat(e.value).toFixed(2)}`).join("\n");
         const blob = new Blob([csv], { type: 'text/csv' });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.href = url; a.download = 'Academic_Ledger_Report.csv';
+        a.href = url; a.download = 'ECCYB_Consolidated_Report.csv';
         a.click();
     }
 
     document.getElementById('connectBtn').onclick = init;
-    document.getElementById('mintBtn').onclick = () => handleAction('MINT');
-    document.getElementById('burnBtn').onclick = () => handleAction('BURN');
+    document.getElementById('mintBtn').onclick = () => handleAction('MINT', 'adminTarget', 'adminAmt');
+    document.getElementById('burnBtn').onclick = () => handleAction('BURN', 'adminTarget', 'adminAmt');
+    document.getElementById('transferBtn').onclick = () => handleAction('TRANSFER', 'transferTarget', 'transferAmt');
     document.getElementById('exportBtn').onclick = exportCSV;
 
     window.onload = renderTable;
