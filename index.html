@@ -95,7 +95,8 @@
             margin-top: 10px;
         }
 
-        .btn-outline { background: transparent; color: var(--u-blue); border: 1px solid var(--u-blue); width: 100%; padding: 10px; cursor: pointer; margin-top: 10px; }
+        .btn-outline { background: transparent; color: var(--u-blue); border: 1px solid var(--u-blue); width: 100%; padding: 10px; cursor: pointer; margin-top: 5px; }
+        .btn-burn { background-color: #5d0000; color: white; border: none; width: 100%; padding: 10px; cursor: pointer; margin-top: 10px; }
         .btn-danger { background-color: transparent; color: #a4161a; border: 1px solid #a4161a; width: 100%; padding: 10px; cursor: pointer; margin-top: 10px; }
 
         #console {
@@ -123,7 +124,7 @@
 
     <header>
         <h1 data-key="title">ECCYB Project</h1>
-        <div class="subtitle" data-key="subtitle">IT Department | ZIEIT</div>
+        <div class="subtitle" data-key="subtitle">Digital Economy & Information Technologies | BTTC Network</div>
     </header>
 
     <div id="authSection">
@@ -138,9 +139,22 @@
         </div>
 
         <div class="panel">
+            <h3 data-key="transferTitle">Internal Asset Transfer</h3>
+            <div class="input-group">
+                <label data-key="labelAddr">Recipient Address</label>
+                <input type="text" id="targetAddr" placeholder="0x...">
+            </div>
+            <div class="input-group">
+                <label data-key="labelAmt">Token Amount</label>
+                <input type="number" id="targetAmount" placeholder="0.00">
+            </div>
+            <button class="main-btn" id="sendBtn" data-key="sendBtn">Execute Transaction</button>
+        </div>
+
+        <div class="panel">
             <h3 data-key="stakingTitle">ECCYB Staking Management</h3>
             <div class="input-group">
-                <label data-key="labelAmt">Amount to Stake</label>
+                <label data-key="labelStakeAmt">Amount to Stake</label>
                 <input type="number" id="stakeAmount" placeholder="0.00">
             </div>
             <div class="input-group">
@@ -148,86 +162,111 @@
                 <input type="number" id="stakeDays" placeholder="e.g. 7">
             </div>
             <button class="main-btn" id="stakeBtn" data-key="stakeBtn">Deposit Assets</button>
-            <div style="margin-top: 20px; border-top: 1px dashed var(--u-border); padding-top: 15px;">
+            <div style="margin-top: 15px; border-top: 1px dashed var(--u-border); padding-top: 10px;">
                 <button class="btn-outline" id="withdrawBtn" data-key="withdrawBtn">Claim Deposit + Bonus</button>
-                <button class="btn-danger" id="earlyWithdrawBtn" data-key="earlyWithdrawBtn">Early Withdrawal (Lose Bonus)</button>
-                <p class="note" data-key="earlyNote">* Early withdrawal returns only the principal amount.</p>
+                <button class="btn-danger" id="earlyWithdrawBtn" data-key="earlyWithdrawBtn">Early Withdrawal (No Bonus)</button>
             </div>
         </div>
 
         <div id="adminPanel" class="panel" style="display:none; border-color: #a3c1ad;">
-            <h3 data-key="adminTitle">Treasury Control (Administrator)</h3>
+            <h3 data-key="adminTitle">Emission & Treasury Control</h3>
             <div class="input-group">
-                <label data-key="labelApprove">Authorize Payouts (Allowance)</label>
+                <label data-key="labelMint">Minting Volume</label>
+                <input type="number" id="mintAmount" placeholder="Amount">
+                <button class="btn-outline" id="mintBtn" data-key="mintBtn">Activate Emission</button>
+            </div>
+            <div class="input-group" style="margin-top:15px;">
+                <label data-key="labelBurn">Asset Destruction (Burn)</label>
+                <input type="number" id="burnAmount" placeholder="Amount">
+                <button class="btn-burn" id="burnBtn" data-key="burnBtn">Burn Tokens</button>
+            </div>
+            <div class="input-group" style="margin-top:15px; border-top: 1px solid #eee; padding-top: 10px;">
+                <label data-key="labelApprove">Authorize Staking Payouts (Allowance)</label>
                 <input type="number" id="approveAmt" placeholder="Amount">
-                <button class="main-btn" id="approveBtn" data-key="approveBtn">Approve Contract</button>
+                <button class="main-btn" id="approveBtn" style="background-color: #2c3e50;" data-key="approveBtn">Set Treasury Allowance</button>
             </div>
         </div>
 
-        <button class="btn-outline" id="disconnectBtn" data-key="exitBtn">Terminate Session</button>
+        <button class="btn-outline" id="disconnectBtn" data-key="exitBtn" style="margin-top: 20px;">Terminate Session</button>
     </div>
 
     <div id="console" data-key="consoleInit">System awaiting blockchain connection...</div>
 </div>
 
 <script>
-    const TOKEN_ADDR = "0x4aa97493d7c8e570a548549222d21e91aa6c60ca";
-    const STAKING_ADDR = "0x440C907485cb68B3A708EcC3d0E93d121bF6dAeb"; // Вставити після деплою
+    const CONTRACT_ADDR = "0x4aa97493d7c8e570a548549222d21e91aa6c60ca";
+    const STAKING_ADDR = "0xВАША_АДРЕСА_КОНТРАКТУ_СТЕЙКІНГУ"; // Потрібно замінити після деплою
     const OWNER_ADDR = "0xf08b28c6d8a26cd1a24d1dbc95c89005f1e04ead";
     
     const i18n = {
         en: {
             title: "ECCYB Project",
-            subtitle: "IT Department | ZIEIT University",
+            subtitle: "Digital Economy & Information Technologies | BTTC Network",
             connectBtn: "Initialize Session (MetaMask)",
             accType: "ACCOUNT TYPE",
-            accAdmin: "TREASURY ADMINISTRATOR",
-            accStudent: "STUDENT ACCOUNT",
-            stakingTitle: "ECCYB Staking Management",
+            accAdmin: "ADMINISTRATIVE ACCESS",
+            accStudent: "STUDENT ACCESS",
+            transferTitle: "Internal Asset Transfer",
+            labelAddr: "Recipient Address",
             labelAmt: "Token Amount",
+            labelStakeAmt: "Amount to Stake",
             labelDays: "Term (Days)",
             stakeBtn: "Deposit Assets",
             withdrawBtn: "Claim Deposit + Bonus",
-            earlyWithdrawBtn: "Early Withdrawal (Lose Bonus)",
-            earlyNote: "* Early withdrawal returns only the principal amount.",
-            adminTitle: "Treasury Control (Administrator)",
-            labelApprove: "Authorize Payouts (Allowance)",
-            approveBtn: "Approve Contract",
+            earlyWithdrawBtn: "Early Withdrawal (No Bonus)",
+            sendBtn: "Execute Transaction",
+            adminTitle: "Emission & Treasury Control",
+            labelMint: "Minting Volume",
+            mintBtn: "Activate Emission",
+            labelBurn: "Asset Destruction (Burn)",
+            burnBtn: "Burn Tokens",
+            labelApprove: "Authorize Staking Payouts (Allowance)",
+            approveBtn: "Set Treasury Allowance",
             exitBtn: "Terminate Session",
             consoleInit: "System awaiting blockchain connection...",
             logConn: "Session initialized for ",
-            logWait: "Processing transaction...",
-            logSuccess: "Transaction confirmed.",
+            logWait: "Transaction processing...",
+            logSuccess: "Transaction successfully confirmed.",
+            logMint: "Asset emission request...",
+            logBurn: "Asset destruction request...",
             viewScan: "View on BTTScan"
         },
         ua: {
-            title: "Проєкт ECCYB",
-            subtitle: "Кафедра ІТ | ЗІЕІТ",
+            title: "ECCYB Project",
+            subtitle: "Цифрова економіка та інформаційні технології | BTTC Network",
             connectBtn: "Ініціалізувати сесію (MetaMask)",
-            accType: "ТИП ОБЛІКОВОГО ЗАПИСУ",
-            accAdmin: "АДМІНІСТРАТОР КАЗНАЧЕЙСТВА",
-            accStudent: "СТУДЕНТСЬКИЙ РАХУНОК",
-            stakingTitle: "Керування стейкінгом ECCYB",
-            labelAmt: "Кількість токенів",
+            accType: "ОБЛІКОВИЙ ЗАПИС",
+            accAdmin: "АДМІНІСТРАТИВНИЙ ДОСТУП",
+            accStudent: "СТУДЕНТСЬКИЙ ДОСТУП",
+            transferTitle: "Внутрішній переказ (Transfer)",
+            labelAddr: "Адреса отримувача",
+            labelAmt: "Сума токенів",
+            labelStakeAmt: "Сума для стейкінгу",
             labelDays: "Термін (днів)",
             stakeBtn: "Внести активи",
             withdrawBtn: "Забрати депозит + бонус",
             earlyWithdrawBtn: "Дострокове розірвання (без бонусу)",
-            earlyNote: "* При достроковому виводі бонус 10% втрачається.",
-            adminTitle: "Керування казначейством (Адмін)",
-            labelApprove: "Ліміт виплат (Allowance)",
-            approveBtn: "Надати дозвіл контракту",
+            sendBtn: "Виконати транзакцію",
+            adminTitle: "Управління емісією та скарбницею",
+            labelMint: "Обсяг емісії (Mint)",
+            mintBtn: "Активувати емісію",
+            labelBurn: "Вилучення з обігу (Burn)",
+            burnBtn: "Спалити токени",
+            labelApprove: "Дозвіл на виплати стейкінгу",
+            approveBtn: "Встановити ліміт скарбниці",
             exitBtn: "Завершити сесію",
             consoleInit: "Система очікує підключення...",
             logConn: "Сесію ініціалізовано для ",
             logWait: "Транзакція в обробці...",
-            logSuccess: "Транзакцію підтверджено.",
+            logSuccess: "Транзакція успішно підтверджена.",
+            logMint: "Запит на емісію активів...",
+            logBurn: "Запит на деструкцію токенів...",
             viewScan: "Переглянути в BTTScan"
         }
     };
 
-    let currentLang = 'en'; 
-    let signer, tokenContract, stakingContract, userAddress;
+    let currentLang = 'en';
+    let signer, contract, stakingContract, userAddress;
 
     function setLang(lang) {
         currentLang = lang;
@@ -247,11 +286,12 @@
             html += ` <br><small>TX: <a href="https://bttcscan.com/tx/${hash}" target="_blank" style="color: #a3c1ad;">${i18n[currentLang].viewScan}</a></small>`;
         }
         c.innerHTML = html + `<br>` + c.innerHTML;
+        c.scrollTop = 0;
     };
 
     async function syncData() {
-        const bal = await tokenContract.balanceOf(userAddress);
-        document.getElementById('userBalance').innerText = `${parseFloat(ethers.formatUnits(bal, 18)).toFixed(2)} ECCYB`;
+        const bal = await contract.balanceOf(userAddress);
+        document.getElementById('userBalance').innerText = `${Math.floor(Number(ethers.formatUnits(bal, 18)))} ECCYB`;
     }
 
     async function connect() {
@@ -262,11 +302,16 @@
             const provider = new ethers.BrowserProvider(window.ethereum);
             signer = await provider.getSigner();
 
-            tokenContract = new ethers.Contract(TOKEN_ADDR, [
+            // Основний контракт токена
+            contract = new ethers.Contract(CONTRACT_ADDR, [
                 "function balanceOf(address) view returns (uint256)",
-                "function approve(address, uint256) returns (bool)"
+                "function transfer(address, uint256) public returns (bool)",
+                "function approve(address, uint256) public returns (bool)",
+                "function mint(address, uint256) public",
+                "function burn(uint256) public"
             ], signer);
 
+            // Контракт стейкінгу
             stakingContract = new ethers.Contract(STAKING_ADDR, [
                 "function stake(uint256, uint256) external",
                 "function withdraw() external",
@@ -282,13 +327,13 @@
             document.getElementById('accountType').innerText = i18n[currentLang][isAdmin ? 'accAdmin' : 'accStudent'];
 
             await syncData();
-            log(i18n[currentLang].logConn + userAddress.substring(0, 10) + "...");
+            log(i18n[currentLang].logConn + userAddress.substring(0, 8) + "...");
         } catch (e) { log(e.message); }
     }
 
-    async function runTx(contractObj, method, ...args) {
+    async function handleTx(contractObj, action, method, ...args) {
         try {
-            log("logWait");
+            log(i18n[currentLang][action] || action);
             const tx = await contractObj[method](...args);
             log("logWait", tx.hash);
             await tx.wait();
@@ -299,26 +344,44 @@
 
     document.getElementById('connectBtn').onclick = connect;
 
+    // 1. Transfer (Restored)
+    document.getElementById('sendBtn').onclick = () => {
+        const to = document.getElementById('targetAddr').value;
+        const amt = document.getElementById('targetAmount').value;
+        if (ethers.isAddress(to) && amt) handleTx(contract, 'transferTitle', 'transfer', to, ethers.parseUnits(amt, 18));
+    };
+
+    // 2. Staking Actions
     document.getElementById('stakeBtn').onclick = async () => {
         const amt = document.getElementById('stakeAmount').value;
         const days = document.getElementById('stakeDays').value;
         if (amt && days) {
-            // Крок 1: Approve для контракту стейкінгу
-            log("Step 1/2: Approving transfer...");
-            const tx1 = await tokenContract.approve(STAKING_ADDR, ethers.parseUnits(amt, 18));
-            await tx1.wait();
-            // Крок 2: Сам стейкінг
-            log("Step 2/2: Staking assets...");
-            await runTx(stakingContract, 'stake', ethers.parseUnits(amt, 18), days);
+            log("Approving staking transfer...");
+            const txApprove = await contract.approve(STAKING_ADDR, ethers.parseUnits(amt, 18));
+            await txApprove.wait();
+            handleTx(stakingContract, 'stakeBtn', 'stake', ethers.parseUnits(amt, 18), days);
         }
     };
 
-    document.getElementById('withdrawBtn').onclick = () => runTx(stakingContract, 'withdraw');
-    document.getElementById('earlyWithdrawBtn').onclick = () => runTx(stakingContract, 'earlyWithdraw');
-    
+    document.getElementById('withdrawBtn').onclick = () => handleTx(stakingContract, 'withdrawBtn', 'withdraw');
+    document.getElementById('earlyWithdrawBtn').onclick = () => {
+        if(confirm("Are you sure? Early withdrawal forfeits the 10% bonus.")) {
+            handleTx(stakingContract, 'earlyWithdrawBtn', 'earlyWithdraw');
+        }
+    };
+
+    // 3. Admin Actions (Restored + New Treasury Approve)
+    document.getElementById('mintBtn').onclick = () => {
+        const amt = document.getElementById('mintAmount').value;
+        if (amt) handleTx(contract, 'logMint', 'mint', userAddress, ethers.parseUnits(amt, 18));
+    };
+    document.getElementById('burnBtn').onclick = () => {
+        const amt = document.getElementById('burnAmount').value;
+        if (amt) handleTx(contract, 'logBurn', 'burn', ethers.parseUnits(amt, 18));
+    };
     document.getElementById('approveBtn').onclick = () => {
         const amt = document.getElementById('approveAmt').value;
-        if (amt) runTx(tokenContract, 'approve', STAKING_ADDR, ethers.parseUnits(amt, 18));
+        if (amt) handleTx(contract, 'approveBtn', 'approve', STAKING_ADDR, ethers.parseUnits(amt, 18));
     };
 
     document.getElementById('disconnectBtn').onclick = () => location.reload();
