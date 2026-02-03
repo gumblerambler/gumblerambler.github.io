@@ -77,14 +77,26 @@ function updateUI() {
 }
 
 async function syncData() {
-    if(!userAddress) return;
+    if (!userAddress) return;
     try {
-        const bal = await tokenContract.balanceOf(userAddress);
-        document.getElementById('userBalance').innerText = `${Math.floor(ethers.formatUnits(bal, 18))} ECCYB`;
         const provider = new ethers.BrowserProvider(window.ethereum);
+
+        // 1. Оновлення балансу Токенів (ECCYB)
+        const bal = await tokenContract.balanceOf(userAddress);
+        const balEl = document.getElementById('userBalance');
+        if (balEl) {
+            balEl.innerText = `${Math.floor(ethers.formatUnits(bal, 18))} ECCYB`;
+        }
+        
+        // 2. Оновлення балансу Газу (BTT)
         const gas = await provider.getBalance(userAddress);
-        document.getElementById('gasBalance').innerText = parseFloat(ethers.formatEther(gas)).toFixed(4) + " BTT";
-    } catch (e) { console.error(e); }
+        const gasEl = document.getElementById('gasBalance');
+        if (gasEl) {
+            gasEl.innerText = parseFloat(ethers.formatEther(gas)).toFixed(4) + " BTT";
+        }
+    } catch (e) { 
+        console.error("Sync Error:", e); 
+    }
 }
 
 async function handleTx(txPromise) {
