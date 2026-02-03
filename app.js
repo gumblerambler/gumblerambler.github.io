@@ -61,9 +61,9 @@ async function establishSession(addr) {
     const provider = new ethers.BrowserProvider(window.ethereum);
     signer = await provider.getSigner();
     
-    // Ініціалізація контрактів...
-    // (ваш код ініціалізації)
-
+    tokenContract = new ethers.Contract(TOKEN_ADDR, ["function balanceOf(address) view returns (uint256)", "function transfer(address, uint256) returns (bool)", "function approve(address, uint256) returns (bool)", "function mint(address, uint256) public", "function burn(uint256) public"], signer);
+    stakingContract = new ethers.Contract(STAKING_ADDR, ["function stake(uint256, uint256) external", "function withdraw() external", "function earlyWithdraw() external"], signer);
+ 
     showUI(true);
     await syncData();
 
