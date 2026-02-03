@@ -1,19 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8"><title>ECCYB | Home</title>
+    <meta charset="UTF-8"><title>ECCYB | Dashboard</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://unpkg.com/ethers@6.7.0/dist/ethers.umd.min.js"></script>
 </head>
 <body>
 <div class="container">
-    <div class="lang-switch">
-        <button class="lang-btn" onclick="setLang('en')">EN</button>
-        <button class="lang-btn" onclick="setLang('ua')">UA</button>
-    </div>
+    <div class="lang-switch"><button class="lang-btn" onclick="setLang('en')">EN</button><button class="lang-btn" onclick="setLang('ua')">UA</button></div>
     <header><h1>ECCYB Project</h1></header>
 
-    <div id="authSection" style="text-align: center; padding: 40px;">
+    <div id="authSection" style="text-align:center; padding:40px;">
         <button onclick="connect()" data-i18n="connBtn">Connect MetaMask</button>
     </div>
 
@@ -22,20 +19,34 @@
         <a href="staking.html" data-i18n="stake">Staking</a>
         <a href="transfer.html" data-i18n="wallet">Transfer</a>
         <a href="admin.html" class="admin-only" data-i18n="admin" style="display:none; color:red;">Admin</a>
-        <a href="#" onclick="logout(); return false;" data-i18n="logout" style="color:#666; margin-left: 10px;">Logout</a>
+        <a href="#" onclick="logout(); return false;" data-i18n="logout" style="color:#666; margin-left:10px;">Logout</a>
     </nav>
 
     <div id="dataSection" style="display:none;">
         <div class="status-bar">
+            <div class="status-item"><strong data-i18n="bal">ECCYB</strong>: <span id="eccybStat">--</span></div>
             <div class="status-item"><strong data-i18n="gas">Gas</strong>: <span id="gasBalance">-- BTT</span></div>
-            <div class="status-item"><strong>Network</strong>: BTTC</div>
         </div>
-        <div class="panel" style="text-align:center;">
-            <h3 data-i18n="bal">Balance</h3>
-            <h1 id="userBalance">-- ECCYB</h1>
+
+        <div class="panel">
+            <h3 data-i18n="stake">Staking</h3>
+            <p style="font-size:0.85rem;" data-i18n="descStake">Earn rewards by locking your tokens.</p>
+            <button class="btn-outline" onclick="window.location.href='staking.html'" data-i18n="btnStake">Go</button>
+        </div>
+
+        <div class="panel">
+            <h3 data-i18n="wallet">Transfer</h3>
+            <p style="font-size:0.85rem;" data-i18n="descTrans">Send ECCYB tokens to other students.</p>
+            <button class="btn-outline" onclick="window.location.href='transfer.html'" data-i18n="btnSend">Go</button>
+        </div>
+
+        <div class="panel admin-only" style="border-color: #a4161a; display:none;">
+            <h3 data-i18n="admin">Admin</h3>
+            <p style="font-size:0.85rem;" data-i18n="descAdmin">Control emission and gas support.</p>
+            <button class="btn-danger" onclick="window.location.href='admin.html'" data-i18n="btnAdmin">Go</button>
         </div>
     </div>
-    <div id="console">Ready...</div>
+    <div id="console">System ready...</div>
 </div>
 <script src="app.js"></script>
 </body>
