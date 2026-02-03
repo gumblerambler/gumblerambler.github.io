@@ -5,7 +5,7 @@ const OWNER_ADDR = "0xf08b28c6d8a26cd1a24d1dbc95c89005f1e04ead";
 const i18n = {
     en: {
         home: "Home", stake: "Staking", wallet: "Transfer", admin: "Admin", logout: "Logout",
-        gas: "Gas", bal: "ECCYB", connBtn: "Connect MetaMask", logOutMsg: "Session ended.",
+        gas: "Gas", bal: "Token", connBtn: "Connect MetaMask", logOutMsg: "Session ended.",
         wait: "Processing...", ok: "Success!",
         // Розширені описи
         titleStake: "Staking System",
@@ -17,7 +17,7 @@ const i18n = {
     },
     ua: {
         home: "Головна", stake: "Стейкінг", wallet: "Переказ", admin: "Адмін", logout: "Вийти",
-        gas: "Газ", bal: "ECCYB", connBtn: "Підключити MetaMask", logOutMsg: "Сесію завершено.",
+        gas: "Газ", bal: "Токен", connBtn: "Підключити MetaMask", logOutMsg: "Сесію завершено.",
         wait: "Обробка...", ok: "Успішно!",
         // Розширені описи
         titleStake: "Система Стейкінгу",
