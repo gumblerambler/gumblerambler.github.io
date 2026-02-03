@@ -115,22 +115,26 @@ function log(msg) {
 }
 
 function logout() {
-    // У Web3 ми не можемо "змусити" MetaMask розірвати зв'язок, 
-    // але ми можемо очистити стан додатка та локальне сховище
+    // 1. Скидаємо змінні сесії
     userAddress = null;
     signer = null;
     
-    // Очищаємо екран
+    // 2. Очищаємо візуальні баланси (ECCYB та Газ)
     const balEl = document.getElementById('userBalance');
-    if (balEl) balEl.innerText = "-- ECCYB";
+    const gasEl = document.getElementById('gasBalance');
     
+    if (balEl) balEl.innerText = "-- ECCYB";
+    if (gasEl) gasEl.innerText = "-- BTT"; // Додано очищення газу
+    
+    // 3. Виводимо повідомлення в консоль
     log(i18n[currentLang].logOutMsg);
     
-    // Приховуємо адмін-панель
+    // 4. Приховуємо елементи адміна
     document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
     
-    // Опціонально: перезавантажити сторінку для повної безпеки
-     window.location.reload(); 
+    // 5. Опціонально: якщо ви хочете повністю розірвати зв'язок 
+    // і змусити користувача натиснути "Connect" знову при перезавантаженні:
+    localStorage.removeItem('connected'); 
 }
 
 window.onload = init;
