@@ -7,7 +7,7 @@ const i18n = {
         home: "Home", stake: "Staking", wallet: "Transfer", admin: "Admin", logout: "Logout",
         gas: "Gas", bal: "Token", connBtn: "Connect MetaMask", logOutMsg: "Session ended.",
         wait: "Processing...", ok: "Success!", stakeTitle: "Deposit", withdrawTitle: "Withdraw",
-        btnStake: "Stake", btnClaim: "Claim", btnEarly: "Early claim",
+        btnStake: "Stake", btnClaim: "Claim", btnEarly: "Early exit",
         // Розширені описи
         titleStake: "Staking System",
         infoStake: "This module allows you to lock your ECCYB tokens for a specific period to earn rewards. Early withdrawal is possible but results in the loss of accumulated bonuses.",
