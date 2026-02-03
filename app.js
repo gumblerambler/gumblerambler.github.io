@@ -60,12 +60,23 @@ async function establishSession(addr) {
     userAddress = addr;
     const provider = new ethers.BrowserProvider(window.ethereum);
     signer = await provider.getSigner();
-    tokenContract = new ethers.Contract(TOKEN_ADDR, ["function balanceOf(address) view returns (uint256)", "function transfer(address, uint256) returns (bool)", "function approve(address, uint256) returns (bool)", "function mint(address, uint256) public", "function burn(uint256) public"], signer);
-    stakingContract = new ethers.Contract(STAKING_ADDR, ["function stake(uint256, uint256) external", "function withdraw() external", "function earlyWithdraw() external"], signer);
+    
+    // Ініціалізація контрактів...
+    // (ваш код ініціалізації)
+
     showUI(true);
     await syncData();
+
+    // ПРАВИЛЬНЕ ВІДОБРАЖЕННЯ АДМІН-ПАНЕЛІ
     const isAdmin = userAddress.toLowerCase() === OWNER_ADDR.toLowerCase();
-    document.querySelectorAll('.admin-only').forEach(el => el.style.display = isAdmin ? 'inline' : 'none');
+    document.querySelectorAll('.admin-only').forEach(el => {
+        if (isAdmin) {
+            // Використовуємо block для панелей, щоб вони не вирівнювалися в рядок
+            el.style.setProperty('display', 'block', 'important');
+        } else {
+            el.style.setProperty('display', 'none', 'important');
+        }
+    });
 }
 
 function showUI(connected) {
