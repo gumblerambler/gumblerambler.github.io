@@ -31,10 +31,28 @@ let signer, tokenContract, stakingContract, userAddress;
 async function init() {
     updateUI();
     if (!window.ethereum) return;
+
+    // ПЕРЕВІРКА ПАРАМЕТРА ВИХОДУ
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('action') === 'logout') {
+        // Якщо ми щойно перейшли сюди для виходу:
+        showUI(false);
+        log(i18n[currentLang].logOutMsg);
+        
+        // Очищаємо параметри в адресному рядку для краси
+        window.history.replaceState({}, document.title, window.location.pathname);
+        return; // Зупиняємо подальшу ініціалізацію
+    }
+
+    // Звичайна логіка підключення
     const provider = new ethers.BrowserProvider(window.ethereum);
     const accounts = await provider.listAccounts();
-    if (accounts.length > 0) await establishSession(accounts[0].address);
-    else showUI(false);
+    
+    if (accounts.length > 0) {
+        await establishSession(accounts[0].address);
+    } else {
+        showUI(false);
+    }
 }
 
 async function connect() {
@@ -105,11 +123,16 @@ async function handleTx(txPromise) {
 }
 
 function logout() {
-    userAddress = null; signer = null;
-    document.getElementById('userBalance').innerText = "-- ECCYB";
-    document.getElementById('gasBalance').innerText = "-- BTT";
-    showUI(false);
-    log(i18n[currentLang].logOutMsg);
+    // 1. Очищаємо локальне сховище, щоб при переході на index.html 
+    // скрипт не намагався автоматично підключитися знову
+    localStorage.removeItem('eccyb_connected'); // якщо ви використовували прапорець автопідключення
+    
+    // 2. Додаємо в URL параметр, щоб index.html знав, що треба показати повідомлення про вихід
+    // Це спрацює як: https://ваша-адреса.github.io/index.html?action=logout
+    const homeUrl = "index.html?action=logout";
+    
+    // 3. Переспрямовуємо
+    window.location.href = homeUrl;
 }
 
 function log(msg) { const c = document.getElementById('console'); if (c) c.innerHTML = `> ${msg}<br>` + c.innerHTML; }
