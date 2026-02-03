@@ -8,31 +8,38 @@
 </head>
 <body>
 <div class="container">
-    <nav><a href="index.html">← Back to Dashboard</a></nav>
+    <div class="lang-switch"><button class="lang-btn" onclick="setLang('en')">EN</button><button class="lang-btn" onclick="setLang('ua')">UA</button></div>
+    <header><h1>ECCYB Staking</h1></header>
+    <nav>
+        <a href="index.html" data-i18n="home">Home</a>
+        <a href="staking.html" data-i18n="stake">Staking</a>
+        <a href="transfer.html" data-i18n="wallet">Transfer</a>
+        <a href="admin.html" class="admin-only" data-i18n="admin" style="display:none; color:red;">Admin</a>
+    </nav>
     <div class="panel">
-        <h3>Deposit Assets</h3>
-        <input type="number" id="sAmt" placeholder="Amount (ECCYB)">
-        <input type="number" id="sDays" placeholder="Term (Days)">
-        <button onclick="stakeNow()">Stake Tokens</button>
+        <h3 data-i18n="stakeTitle">Deposit Assets</h3>
+        <input type="number" id="sAmt" placeholder="Amount">
+        <input type="number" id="sDays" placeholder="Days">
+        <button data-i18n="btnStake" onclick="stakeNow()">Stake Tokens</button>
     </div>
     <div class="panel">
-        <h3>Withdrawal</h3>
-        <button class="btn-outline" onclick="handleTx(stakingContract.withdraw())">Claim Deposit + Bonus</button>
-        <button class="btn-danger" onclick="if(confirm('Lose bonus?')) handleTx(stakingContract.earlyWithdraw())">Early Withdrawal</button>
+        <h3 data-i18n="withdrawTitle">Withdrawal</h3>
+        <button class="btn-outline" data-i18n="btnClaim" onclick="handleTx(stakingContract.withdraw())">Claim</button>
+        <button class="btn-danger" data-i18n="btnEarly" onclick="early()">Early</button>
     </div>
-    <div id="console">Ready for staking operations...</div>
+    <div id="console"></div>
 </div>
 <script src="app.js"></script>
 <script>
     async function stakeNow() {
         const amt = ethers.parseUnits(document.getElementById('sAmt').value, 18);
         const days = document.getElementById('sDays').value;
-        log("Step 1: Approving tokens...");
+        log("Approving...");
         const tx = await tokenContract.approve(STAKING_ADDR, amt);
         await tx.wait();
-        log("Step 2: Staking...");
         handleTx(stakingContract.stake(amt, days));
     }
+    function early() { if(confirm(i18n[currentLang].confirmEarly)) handleTx(stakingContract.earlyWithdraw()); }
 </script>
 </body>
 </html>
