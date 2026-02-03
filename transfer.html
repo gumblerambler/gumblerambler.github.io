@@ -8,14 +8,21 @@
 </head>
 <body>
 <div class="container">
-    <nav><a href="index.html">← Back to Dashboard</a></nav>
+    <div class="lang-switch"><button class="lang-btn" onclick="setLang('en')">EN</button><button class="lang-btn" onclick="setLang('ua')">UA</button></div>
+    <header><h1>ECCYB Wallet</h1></header>
+    <nav>
+        <a href="index.html" data-i18n="home">Home</a>
+        <a href="staking.html" data-i18n="stake">Staking</a>
+        <a href="transfer.html" data-i18n="wallet">Transfer</a>
+        <a href="admin.html" class="admin-only" data-i18n="admin" style="display:none; color:red;">Admin</a>
+    </nav>
     <div class="panel">
-        <h3>Internal Asset Transfer</h3>
-        <input type="text" id="tTo" placeholder="Recipient Address (0x...)">
-        <input type="number" id="tAmt" placeholder="Amount (ECCYB)">
-        <button onclick="handleTx(tokenContract.transfer(document.getElementById('tTo').value, ethers.parseUnits(document.getElementById('tAmt').value, 18)))">Send Tokens</button>
+        <h3 data-i18n="wallet">Transfer Assets</h3>
+        <input type="text" id="tTo" placeholder="Recipient 0x...">
+        <input type="number" id="tAmt" placeholder="Amount">
+        <button data-i18n="btnSend" onclick="handleTx(tokenContract.transfer(document.getElementById('tTo').value, ethers.parseUnits(document.getElementById('tAmt').value, 18)))">Send</button>
     </div>
-    <div id="console">Ready for transfer...</div>
+    <div id="console"></div>
 </div>
 <script src="app.js"></script>
 </body>
