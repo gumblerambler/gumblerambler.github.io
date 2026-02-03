@@ -76,20 +76,43 @@ function updateUI() {
 }
 
 async function syncData() {
-    if(!userAddress) return;
+    if (!userAddress) return;
     try {
-        const bal = await tokenContract.balanceOf(userAddress);
-        const val = Math.floor(ethers.formatUnits(bal, 18));
-        if (document.getElementById('userBalance')) document.getElementById('userBalance').innerText = val + " ECCYB";
-        if (document.getElementById('eccybStat')) document.getElementById('eccybStat').innerText = val;
-        
         const provider = new ethers.BrowserProvider(window.ethereum);
+
+        // 1. Отримання балансу ECCYB
+        const bal = await tokenContract.balanceOf(userAddress);
+        const formattedBal = Math.floor(ethers.formatUnits(bal, 18));
+        
+        // Оновлення великого балансу (на головній)
+        const balEl = document.getElementById('userBalance');
+        if (balEl) balEl.innerText = `${formattedBal} ECCYB`;
+        
+        // Оновлення балансу в статус-барі (на всіх сторінках)
+        const eccybStat = document.getElementById('eccybStat');
+        if (eccybStat) eccybStat.innerText = formattedBal;
+
+        // 2. Оновлення балансу Газу (BTT)
         const gas = await provider.getBalance(userAddress);
-        if (document.getElementById('gasBalance')) document.getElementById('gasBalance').innerText = parseFloat(ethers.formatEther(gas)).toFixed(4) + " BTT";
-    } catch (e) { console.error(e); }
+        const gasEl = document.getElementById('gasBalance');
+        if (gasEl) {
+            gasEl.innerText = parseFloat(ethers.formatEther(gas)).toFixed(4) + " BTT";
+        }
+    } catch (e) { 
+        console.error("Sync Error:", e); 
+    }
 }
 
 function logout() {
+    userAddress = null;
+    signer = null;
+    
+    // Очищення всіх полів балансу
+    if (document.getElementById('userBalance')) document.getElementById('userBalance').innerText = "-- ECCYB";
+    if (document.getElementById('eccybStat')) document.getElementById('eccybStat').innerText = "--";
+    if (document.getElementById('gasBalance')) document.getElementById('gasBalance').innerText = "-- BTT";
+    
+    // Переспрямування на головну з дією виходу
     window.location.href = "index.html?action=logout";
 }
 
