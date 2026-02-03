@@ -6,7 +6,8 @@ const i18n = {
     en: {
         home: "Home", stake: "Staking", wallet: "Transfer", admin: "Admin", logout: "Logout",
         gas: "Gas", bal: "Token", connBtn: "Connect MetaMask", logOutMsg: "Session ended.",
-        wait: "Processing...", ok: "Success!",
+        wait: "Processing...", ok: "Success!", stakeTitle: "Deposit", withdrawTitle: "Withdraw",
+        btnStake: "Stake", btnClaim: "Claim", btnEarly: "Early claim",
         // Розширені описи
         titleStake: "Staking System",
         infoStake: "This module allows you to lock your ECCYB tokens for a specific period to earn rewards. Early withdrawal is possible but results in the loss of accumulated bonuses.",
@@ -18,7 +19,8 @@ const i18n = {
     ua: {
         home: "Головна", stake: "Стейкінг", wallet: "Переказ", admin: "Адмін", logout: "Вийти",
         gas: "Газ", bal: "Токен", connBtn: "Підключити MetaMask", logOutMsg: "Сесію завершено.",
-        wait: "Обробка...", ok: "Успішно!",
+        wait: "Обробка...", ok: "Успішно!", stakeTitle: "Депозит",  withdrawTitle: "Повернення",
+        btnStake: "Вкласти", btnClaim: "Повернути з відсотками", btnEarly: "Повернути без відсотків",
         // Розширені описи
         titleStake: "Система Стейкінгу",
         infoStake: "Цей модуль дозволяє блокувати ваші токени ECCYB на певний термін для отримання винагороди. Дострокове виведення можливе, але призведе до втрати накопичених бонусів.",
