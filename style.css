@@ -1,0 +1,71 @@
+:root {
+    --u-blue: #003366;
+    --u-text: #2c3e50;
+    --u-bg: #f4f4f2;
+    --u-white: #ffffff;
+    --u-border: #d1d1d1;
+    --u-danger: #a4161a;
+}
+
+body {
+    font-family: 'Georgia', serif;
+    background-color: var(--u-bg);
+    color: var(--u-text);
+    margin: 0; padding: 20px;
+    display: flex; justify-content: center;
+}
+
+.container {
+    background: var(--u-white);
+    max-width: 650px; width: 100%;
+    padding: 30px; border: 1px solid var(--u-border);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+}
+
+nav {
+    display: flex; justify-content: space-around;
+    margin-bottom: 25px; border-bottom: 2px double var(--u-blue);
+    padding-bottom: 10px;
+}
+
+nav a {
+    text-decoration: none; color: var(--u-blue);
+    font-weight: bold; font-size: 0.85rem; text-transform: uppercase;
+}
+
+header { text-align: center; margin-bottom: 20px; }
+h1 { font-size: 1.6rem; color: var(--u-blue); margin: 0; text-transform: uppercase; }
+.subtitle { font-style: italic; font-size: 0.8rem; color: #666; }
+
+.status-bar { display: flex; gap: 10px; margin-bottom: 20px; }
+.status-item { 
+    flex: 1; background: #e9ecef; padding: 10px; 
+    font-size: 0.75rem; border: 1px solid var(--u-border); border-radius: 4px;
+}
+
+.balance-card { background: var(--u-bg); padding: 20px; text-align: center; border: 1px solid var(--u-border); }
+#userBalance { font-size: 2.2rem; color: var(--u-blue); margin: 10px 0; }
+
+.panel { border: 1px solid var(--u-border); padding: 20px; margin-top: 20px; }
+h3 { font-size: 1rem; color: var(--u-blue); border-bottom: 1px solid #eee; padding-bottom: 5px; margin-bottom: 15px; }
+
+input { 
+    width: 100%; padding: 10px; margin: 8px 0; 
+    border: 1px solid var(--u-border); box-sizing: border-box; 
+    font-family: 'Courier New', monospace;
+}
+
+button { 
+    width: 100%; padding: 12px; background: var(--u-blue); 
+    color: white; border: none; cursor: pointer; font-family: 'Georgia', serif; font-size: 0.9rem;
+}
+
+.btn-outline { background: none; color: var(--u-blue); border: 1px solid var(--u-blue); margin-top: 5px; }
+.btn-danger { background: none; color: var(--u-danger); border: 1px solid var(--u-danger); margin-top: 5px; }
+.btn-burn { background: #5d0000; color: white; border: none; margin-top: 5px; }
+
+#console {
+    background: #2c3e50; color: #ecf0f1; padding: 15px;
+    font-family: 'Courier New', monospace; font-size: 0.75rem;
+    height: 100px; overflow-y: auto; margin-top: 20px; border-radius: 4px;
+}
