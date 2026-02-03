@@ -2,31 +2,35 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>ECCYB | Home</title>
+    <title>ECCYB | Dashboard</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://unpkg.com/ethers@6.7.0/dist/ethers.umd.min.js"></script>
 </head>
 <body>
 <div class="container">
+    <div class="lang-switch">
+        <button class="lang-btn" onclick="setLang('en')">EN</button>
+        <button class="lang-btn" onclick="setLang('ua')">UA</button>
+    </div>
     <header>
         <h1>ECCYB Project</h1>
         <div class="subtitle">IT Department | ZIEIT University</div>
     </header>
     <nav>
-        <a href="index.html">Home</a>
-        <a href="staking.html">Staking</a>
-        <a href="transfer.html">Transfer</a>
-        <a href="admin.html" class="admin-only" style="display:none; color: var(--u-danger);">Admin</a>
+        <a href="index.html" data-i18n="home">Home</a>
+        <a href="staking.html" data-i18n="stake">Staking</a>
+        <a href="transfer.html" data-i18n="wallet">Transfer</a>
+        <a href="admin.html" class="admin-only" data-i18n="admin" style="display:none; color:red;">Admin</a>
     </nav>
     <div class="status-bar">
-        <div class="status-item">Gas: <span id="gasBalance">--</span> BTT</div>
-        <div class="status-item">Net: <span id="netStatus">Checking...</span></div>
+        <div class="status-item"><strong data-i18n="gas">Gas</strong>: <span id="gasBalance">--</span></div>
+        <div class="status-item"><strong data-i18n="net">Network</strong>: BTTC</div>
     </div>
-    <div class="balance-card">
-        <h3>Your Balance</h3>
+    <div class="panel" style="text-align:center;">
+        <h3 data-i18n="bal">Balance</h3>
         <h1 id="userBalance">-- ECCYB</h1>
     </div>
-    <div id="console">Welcome to ECCYB Digital Economy...</div>
+    <div id="console">Welcome...</div>
 </div>
 <script src="app.js"></script>
 </body>
