@@ -14,7 +14,9 @@ const i18n = {
         btnBurn: "Burn Tokens", btnSend: "Execute Transfer",
         btnGas: "Send BTT to Student", btnAppr: "Set Payout Limit",
         wait: "Processing transaction...", ok: "Success! Data updated.",
-        err: "Error: ", confirmEarly: "Are you sure? Bonus will be lost."
+        err: "Error: ", confirmEarly: "Are you sure? Bonus will be lost.",
+        logout: "Logout",
+        logOutMsg: "Session ended. Please reconnect via MetaMask if needed."
     },
     ua: {
         home: "Головна", stake: "Стейкінг", wallet: "Переказ", admin: "Адмін",
@@ -27,7 +29,9 @@ const i18n = {
         btnBurn: "Спалити токени", btnSend: "Виконати переказ",
         btnGas: "Надіслати BTT студенту", btnAppr: "Встановити ліміт",
         wait: "Транзакція в обробці...", ok: "Успіх! Дані оновлено.",
-        err: "Помилка: ", confirmEarly: "Ви впевнені? Бонус буде втрачено."
+        err: "Помилка: ", confirmEarly: "Ви впевнені? Бонус буде втрачено.",
+        logout: "Вийти",
+        logOutMsg: "Сесію завершено. Підключіться знову через MetaMask за потреби."
     }
 };
 
@@ -108,6 +112,25 @@ function log(msg) {
         c.innerHTML = `> ${msg}<br>` + c.innerHTML;
         c.scrollTop = 0;
     }
+}
+
+function logout() {
+    // У Web3 ми не можемо "змусити" MetaMask розірвати зв'язок, 
+    // але ми можемо очистити стан додатка та локальне сховище
+    userAddress = null;
+    signer = null;
+    
+    // Очищаємо екран
+    const balEl = document.getElementById('userBalance');
+    if (balEl) balEl.innerText = "-- ECCYB";
+    
+    log(i18n[currentLang].logOutMsg);
+    
+    // Приховуємо адмін-панель
+    document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+    
+    // Опціонально: перезавантажити сторінку для повної безпеки
+    // window.location.reload(); 
 }
 
 window.onload = init;
