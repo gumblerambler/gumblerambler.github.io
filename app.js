@@ -4,34 +4,24 @@ const OWNER_ADDR = "0xf08b28c6d8a26cd1a24d1dbc95c89005f1e04ead";
 
 const i18n = {
     en: {
-        home: "Home", stake: "Staking", wallet: "Transfer", admin: "Admin",
+        home: "Home", stake: "Staking", wallet: "Transfer", admin: "Admin", logout: "Logout",
         gas: "Gas Balance", net: "Network", bal: "ECCYB Balance",
-        stakeTitle: "Deposit Assets", withdrawTitle: "Withdrawal Management",
+        stakeTitle: "Deposit Assets", withdrawTitle: "Withdrawal",
         mintTitle: "Emission & Burn", gasTitle: "Gas Support (BTT)",
-        apprTitle: "Treasury Allowance",
-        btnStake: "Stake Tokens", btnClaim: "Claim Deposit + Bonus",
-        btnEarly: "Early Withdrawal", btnMint: "Mint Tokens",
-        btnBurn: "Burn Tokens", btnSend: "Execute Transfer",
-        btnGas: "Send BTT to Student", btnAppr: "Set Payout Limit",
-        wait: "Processing transaction...", ok: "Success! Data updated.",
-        err: "Error: ", confirmEarly: "Are you sure? Bonus will be lost.",
-        logout: "Logout",
-        logOutMsg: "Session ended. Please reconnect via MetaMask if needed."
+        btnStake: "Stake Tokens", btnClaim: "Claim + Bonus", btnEarly: "Early Exit",
+        btnMint: "Mint", btnBurn: "Burn", btnSend: "Send Assets", btnGas: "Send BTT",
+        wait: "Processing...", ok: "Success!", logOutMsg: "Session ended. Data cleared.",
+        connBtn: "Connect MetaMask"
     },
     ua: {
-        home: "Головна", stake: "Стейкінг", wallet: "Переказ", admin: "Адмін",
+        home: "Головна", stake: "Стейкінг", wallet: "Переказ", admin: "Адмін", logout: "Вийти",
         gas: "Баланс Газу", net: "Мережа", bal: "Баланс ECCYB",
-        stakeTitle: "Відкрити депозит", withdrawTitle: "Керування виплатами",
-        mintTitle: "Емісія та Спалення", gasTitle: "Газова підтримка (BTT)",
-        apprTitle: "Ліміт Скарбниці",
-        btnStake: "Внести активи", btnClaim: "Забрати з бонусом",
-        btnEarly: "Достроковий вивід", btnMint: "Випустити токени",
-        btnBurn: "Спалити токени", btnSend: "Виконати переказ",
-        btnGas: "Надіслати BTT студенту", btnAppr: "Встановити ліміт",
-        wait: "Транзакція в обробці...", ok: "Успіх! Дані оновлено.",
-        err: "Помилка: ", confirmEarly: "Ви впевнені? Бонус буде втрачено.",
-        logout: "Вийти",
-        logOutMsg: "Сесію завершено. Підключіться знову через MetaMask за потреби."
+        stakeTitle: "Відкрити депозит", withdrawTitle: "Виплата",
+        mintTitle: "Емісія / Спалення", gasTitle: "Підтримка Газом",
+        btnStake: "Внести активи", btnClaim: "Забрати з бонусом", btnEarly: "Вихід без %",
+        btnMint: "Випустити", btnBurn: "Спалити", btnSend: "Надіслати", btnGas: "Надіслати BTT",
+        wait: "Обробка...", ok: "Успішно!", logOutMsg: "Сесію завершено. Дані очищено.",
+        connBtn: "Підключити MetaMask"
     }
 };
 
@@ -39,42 +29,31 @@ let currentLang = localStorage.getItem('eccyb_lang') || 'en';
 let signer, tokenContract, stakingContract, userAddress;
 
 async function init() {
+    updateUI();
     if (!window.ethereum) return;
-    
-    // Перевіряємо, чи вже є дозволені акаунти
     const provider = new ethers.BrowserProvider(window.ethereum);
     const accounts = await provider.listAccounts();
-
-    if (accounts.length > 0) {
-        await establishSession(accounts[0]);
-    } else {
-        showUI(false); // Показуємо тільки кнопку Connect
-    }
-    updateUI();
+    if (accounts.length > 0) await establishSession(accounts[0].address);
+    else showUI(false);
 }
 
 async function connect() {
     try {
         const provider = new ethers.BrowserProvider(window.ethereum);
         const accounts = await provider.send("eth_requestAccounts", []);
-        await establishSession({address: accounts[0]});
-    } catch (e) {
-        log("Connection failed: " + e.message);
-    }
+        await establishSession(accounts[0]);
+    } catch (e) { log("Connection error"); }
 }
 
-async function establishSession(account) {
-    userAddress = account.address || account;
+async function establishSession(addr) {
+    userAddress = addr;
     const provider = new ethers.BrowserProvider(window.ethereum);
     signer = await provider.getSigner();
-
-    tokenContract = new ethers.Contract(TOKEN_ADDR, [/* ABI як раніше */], signer);
-    stakingContract = new ethers.Contract(STAKING_ADDR, [/* ABI як раніше */], signer);
-
-    showUI(true); // Показуємо меню та баланси
-    await syncData();
+    tokenContract = new ethers.Contract(TOKEN_ADDR, ["function balanceOf(address) view returns (uint256)", "function transfer(address, uint256) returns (bool)", "function approve(address, uint256) returns (bool)", "function mint(address, uint256) public", "function burn(uint256) public"], signer);
+    stakingContract = new ethers.Contract(STAKING_ADDR, ["function stake(uint256, uint256) external", "function withdraw() external", "function earlyWithdraw() external"], signer);
     
-    // Перевірка адміна
+    showUI(true);
+    await syncData();
     const isAdmin = userAddress.toLowerCase() === OWNER_ADDR.toLowerCase();
     document.querySelectorAll('.admin-only').forEach(el => el.style.display = isAdmin ? 'inline' : 'none');
 }
@@ -85,16 +64,41 @@ function showUI(connected) {
     document.getElementById('dataSection').style.display = connected ? 'block' : 'none';
 }
 
+function setLang(lang) { currentLang = lang; localStorage.setItem('eccyb_lang', lang); updateUI(); }
+
+function updateUI() {
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (i18n[currentLang][key]) el.innerText = i18n[currentLang][key];
+    });
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.innerText.toLowerCase() === currentLang);
+    });
+}
+
+async function syncData() {
+    if(!userAddress) return;
+    try {
+        const bal = await tokenContract.balanceOf(userAddress);
+        document.getElementById('userBalance').innerText = `${Math.floor(ethers.formatUnits(bal, 18))} ECCYB`;
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const gas = await provider.getBalance(userAddress);
+        document.getElementById('gasBalance').innerText = parseFloat(ethers.formatEther(gas)).toFixed(4) + " BTT";
+    } catch (e) { console.error(e); }
+}
+
+async function handleTx(txPromise) {
+    try { log(i18n[currentLang].wait); const tx = await txPromise; await tx.wait(); log(i18n[currentLang].ok); await syncData(); }
+    catch (e) { log("Error: " + (e.reason || e.message)); }
+}
+
 function logout() {
-    userAddress = null;
-    signer = null;
-    
-    // Очищення полів
-    if (document.getElementById('userBalance')) document.getElementById('userBalance').innerText = "-- ECCYB";
-    if (document.getElementById('gasBalance')) document.getElementById('gasBalance').innerText = "-- BTT";
-    
+    userAddress = null; signer = null;
+    document.getElementById('userBalance').innerText = "-- ECCYB";
+    document.getElementById('gasBalance').innerText = "-- BTT";
     showUI(false);
     log(i18n[currentLang].logOutMsg);
 }
 
+function log(msg) { const c = document.getElementById('console'); if (c) c.innerHTML = `> ${msg}<br>` + c.innerHTML; }
 window.onload = init;
