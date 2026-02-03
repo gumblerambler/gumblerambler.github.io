@@ -99,13 +99,18 @@ async function syncData() {
     try {
         const provider = new ethers.BrowserProvider(window.ethereum);
 
-        // 1. Оновлення балансу Токенів (ECCYB)
+        // 1. Отримання балансу ECCYB
         const bal = await tokenContract.balanceOf(userAddress);
-        const balEl = document.getElementById('userBalance');
-        if (balEl) {
-            balEl.innerText = `${Math.floor(ethers.formatUnits(bal, 18))} ECCYB`;
-        }
+        const formattedBal = Math.floor(ethers.formatUnits(bal, 18));
         
+        // Оновлення великого балансу (на головній)
+        const balEl = document.getElementById('userBalance');
+        if (balEl) balEl.innerText = `${formattedBal} ECCYB`;
+        
+        // Оновлення балансу в статус-барі (на всіх сторінках)
+        const eccybStat = document.getElementById('eccybStat');
+        if (eccybStat) eccybStat.innerText = formattedBal;
+
         // 2. Оновлення балансу Газу (BTT)
         const gas = await provider.getBalance(userAddress);
         const gasEl = document.getElementById('gasBalance');
