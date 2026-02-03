@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>ECCYB | Dashboard</title>
+    <meta charset="UTF-8"><title>ECCYB | Home</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://unpkg.com/ethers@6.7.0/dist/ethers.umd.min.js"></script>
 </head>
@@ -14,23 +13,23 @@
     </div>
     <header>
         <h1>ECCYB Project</h1>
-        <div class="subtitle">IT Department | ZIEIT University</div>
-    </header>
+        </header>
     <nav>
         <a href="index.html" data-i18n="home">Home</a>
         <a href="staking.html" data-i18n="stake">Staking</a>
         <a href="transfer.html" data-i18n="wallet">Transfer</a>
         <a href="admin.html" class="admin-only" data-i18n="admin" style="display:none; color:red;">Admin</a>
+        <a href="#" onclick="logout(); return false;" data-i18n="logout" style="color: #666; margin-left: 10px;">Logout</a>
     </nav>
     <div class="status-bar">
         <div class="status-item"><strong data-i18n="gas">Gas</strong>: <span id="gasBalance">--</span></div>
-        <div class="status-item"><strong data-i18n="net">Network</strong>: BTTC</div>
+        <div class="status-item"><strong>Network</strong>: BTTC Mainnet</div>
     </div>
     <div class="panel" style="text-align:center;">
         <h3 data-i18n="bal">Balance</h3>
         <h1 id="userBalance">-- ECCYB</h1>
     </div>
-    <div id="console">Welcome...</div>
+    <div id="console">System ready...</div>
 </div>
 <script src="app.js"></script>
 </body>
