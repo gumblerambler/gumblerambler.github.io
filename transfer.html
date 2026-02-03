@@ -1,47 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>ECCYB | Transfer</title>
+    <meta charset="UTF-8"><title>ECCYB | Transfer</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://unpkg.com/ethers@6.7.0/dist/ethers.umd.min.js"></script>
 </head>
 <body>
 <div class="container">
-    <div class="lang-switch">
-        <button class="lang-btn" onclick="setLang('en')">EN</button>
-        <button class="lang-btn" onclick="setLang('ua')">UA</button>
-    </div>
-
-    <header>
-        <h1>ECCYB Project</h1>
-    </header>
-
-    <div id="authSection" style="text-align: center; padding: 20px;">
-        <button onclick="connect()" style="max-width: 250px;">Connect MetaMask</button>
-    </div>
-
-    <nav id="mainNav" style="display: none;">
-        <a href="index.html" data-i18n="home">Home</a>
-        <a href="staking.html" data-i18n="stake">Staking</a>
-        <a href="transfer.html" data-i18n="wallet">Transfer</a>
+    <div class="lang-switch"><button class="lang-btn" onclick="setLang('en')">EN</button><button class="lang-btn" onclick="setLang('ua')">UA</button></div>
+    <header><h1>Transfer</h1></header>
+    <div id="authSection" style="text-align: center; padding: 40px;"><button onclick="connect()" data-i18n="connBtn">Connect</button></div>
+    <nav id="mainNav" style="display:none;">
+        <a href="index.html" data-i18n="home">Home</a><a href="staking.html" data-i18n="stake">Staking</a><a href="transfer.html" data-i18n="wallet">Transfer</a>
         <a href="admin.html" class="admin-only" data-i18n="admin" style="display:none; color:red;">Admin</a>
-        <a href="#" onclick="logout(); return false;" data-i18n="logout" style="color: #666;">Logout</a>
+        <a href="#" onclick="logout(); return false;" data-i18n="logout" style="color:#666;">Logout</a>
     </nav>
-
-    <div id="dataSection" style="display: none;">
-        <div class="status-bar">
-            <div class="status-item"><strong data-i18n="gas">Gas</strong>: <span id="gasBalance">--</span></div>
-            <div class="status-item"><strong>Network</strong>: BTTC</div>
-        </div>
-
-        <div class="panel" style="text-align:center;">
-            <h3 data-i18n="bal">Balance</h3>
-            <h1 id="userBalance">-- ECCYB</h1>
+    <div id="dataSection" style="display:none;">
+        <div class="status-bar"><div class="status-item"><strong data-i18n="gas">Gas</strong>: <span id="gasBalance">-- BTT</span></div><div class="status-item"><strong>Network</strong>: BTTC</div></div>
+        <div class="panel">
+            <h3 data-i18n="wallet">Send</h3>
+            <input type="text" id="tTo" placeholder="Recipient Address 0x...">
+            <input type="number" id="tAmt" placeholder="Amount (ECCYB)">
+            <button data-i18n="btnSend" onclick="handleTx(tokenContract.transfer(document.getElementById('tTo').value, ethers.parseUnits(document.getElementById('tAmt').value, 18)))">Send</button>
         </div>
     </div>
-
-    <div id="console">System ready...</div>
+    <div id="console"></div>
 </div>
 <script src="app.js"></script>
 </body>
