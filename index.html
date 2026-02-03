@@ -7,7 +7,10 @@
 </head>
 <body>
 <div class="container">
-    <div class="lang-switch"><button class="lang-btn" onclick="setLang('en')">EN</button><button class="lang-btn" onclick="setLang('ua')">UA</button></div>
+    <div class="lang-switch">
+        <button class="lang-btn" onclick="setLang('en')">EN</button>
+        <button class="lang-btn" onclick="setLang('ua')">UA</button>
+    </div>
     <header><h1>ECCYB Project</h1></header>
 
     <div id="authSection" style="text-align:center; padding:40px;">
@@ -25,25 +28,23 @@
     <div id="dataSection" style="display:none;">
         <div class="status-bar">
             <div class="status-item"><strong data-i18n="bal">ECCYB</strong>: <span id="eccybStat">--</span></div>
-            <div class="status-item"><strong data-i18n="gas">Gas</strong>: <span id="gasBalance">-- BTT</span></div>
+            <div class="status-item"><strong data-i18n="gas">Gas</strong>: <span id="gasBalance">--</span></div>
+            <div class="status-item"><strong>Net</strong>: BTTC</div>
         </div>
 
         <div class="panel">
-            <h3 data-i18n="stake">Staking</h3>
-            <p style="font-size:0.85rem;" data-i18n="descStake">Earn rewards by locking your tokens.</p>
-            <button class="btn-outline" onclick="window.location.href='staking.html'" data-i18n="btnStake">Go</button>
+            <h3 data-i18n="titleStake">Staking System</h3>
+            <p style="font-size:0.85rem; color: #555;" data-i18n="infoStake"></p>
         </div>
 
         <div class="panel">
-            <h3 data-i18n="wallet">Transfer</h3>
-            <p style="font-size:0.85rem;" data-i18n="descTrans">Send ECCYB tokens to other students.</p>
-            <button class="btn-outline" onclick="window.location.href='transfer.html'" data-i18n="btnSend">Go</button>
+            <h3 data-i18n="titleTrans">Asset Transfers</h3>
+            <p style="font-size:0.85rem; color: #555;" data-i18n="infoTrans"></p>
         </div>
 
         <div class="panel admin-only" style="border-color: #a4161a; display:none;">
-            <h3 data-i18n="admin">Admin</h3>
-            <p style="font-size:0.85rem;" data-i18n="descAdmin">Control emission and gas support.</p>
-            <button class="btn-danger" onclick="window.location.href='admin.html'" data-i18n="btnAdmin">Go</button>
+            <h3 data-i18n="titleAdmin">Administrative Tools</h3>
+            <p style="font-size:0.85rem; color: #555;" data-i18n="infoAdmin"></p>
         </div>
     </div>
     <div id="console">System ready...</div>
