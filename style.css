@@ -23,12 +23,7 @@ h1 { font-size: 1.5rem; color: var(--u-blue); margin: 0; text-transform: upperca
 .status-bar { display: flex; gap: 10px; margin-bottom: 20px; }
 .status-item { flex: 1; background: #e9ecef; padding: 10px; font-size: 0.7rem; border: 1px solid var(--u-border); border-radius: 4px; }
 
-.panel {
-    display: block; /* Гарантуємо, що панель - це блок */
-    width: 100%;
-    margin-bottom: 20px;
-    box-sizing: border-box;
-}
+.panel { border: 1px solid var(--u-border); padding: 20px; margin-top: 20px; background: #fff; }
 
 .panel.admin-only {
     border: 1px solid var(--u-danger); /* Червона рамка для привернення уваги */
