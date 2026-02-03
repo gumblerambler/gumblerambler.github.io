@@ -39,102 +39,62 @@ let currentLang = localStorage.getItem('eccyb_lang') || 'en';
 let signer, tokenContract, stakingContract, userAddress;
 
 async function init() {
-    if (!window.ethereum) return alert("Install MetaMask!");
-    const provider = new ethers.BrowserProvider(window.ethereum);
-    const accounts = await provider.send("eth_requestAccounts", []);
-    userAddress = accounts[0];
-    signer = await provider.getSigner();
-
-    tokenContract = new ethers.Contract(TOKEN_ADDR, [
-        "function balanceOf(address) view returns (uint256)",
-        "function transfer(address, uint256) returns (bool)",
-        "function approve(address, uint256) returns (bool)",
-        "function mint(address, uint256) public",
-        "function burn(uint256) public"
-    ], signer);
-
-    stakingContract = new ethers.Contract(STAKING_ADDR, [
-        "function stake(uint256, uint256) external",
-        "function withdraw() external",
-        "function earlyWithdraw() external"
-    ], signer);
-
-    const isAdmin = userAddress.toLowerCase() === OWNER_ADDR.toLowerCase();
-    document.querySelectorAll('.admin-only').forEach(el => el.style.display = isAdmin ? 'inline' : 'none');
+    if (!window.ethereum) return;
     
+    // Перевіряємо, чи вже є дозволені акаунти
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const accounts = await provider.listAccounts();
+
+    if (accounts.length > 0) {
+        await establishSession(accounts[0]);
+    } else {
+        showUI(false); // Показуємо тільки кнопку Connect
+    }
     updateUI();
-    await syncData();
-    log("Connected: " + userAddress.substring(0, 10));
 }
 
-function setLang(lang) {
-    currentLang = lang;
-    localStorage.setItem('eccyb_lang', lang);
-    updateUI();
-}
-
-function updateUI() {
-    document.querySelectorAll('[data-i18n]').forEach(el => {
-        const key = el.getAttribute('data-i18n');
-        if (i18n[currentLang][key]) el.innerText = i18n[currentLang][key];
-    });
-    document.querySelectorAll('.lang-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.innerText.toLowerCase() === currentLang);
-    });
-}
-
-async function syncData() {
+async function connect() {
     try {
-        const bal = await tokenContract.balanceOf(userAddress);
-        if (document.getElementById('userBalance')) 
-            document.getElementById('userBalance').innerText = `${Math.floor(ethers.formatUnits(bal, 18))} ECCYB`;
-        
         const provider = new ethers.BrowserProvider(window.ethereum);
-        const gas = await provider.getBalance(userAddress);
-        if (document.getElementById('gasBalance')) 
-            document.getElementById('gasBalance').innerText = parseFloat(ethers.formatEther(gas)).toFixed(2) + " BTT";
-    } catch (e) { console.error(e); }
-}
-
-async function handleTx(txPromise) {
-    try {
-        log(i18n[currentLang].wait);
-        const tx = await txPromise;
-        await tx.wait();
-        log(i18n[currentLang].ok);
-        await syncData();
-    } catch (e) { log(i18n[currentLang].err + (e.reason || e.message)); }
-}
-
-function log(msg) {
-    const c = document.getElementById('console');
-    if (c) {
-        c.innerHTML = `> ${msg}<br>` + c.innerHTML;
-        c.scrollTop = 0;
+        const accounts = await provider.send("eth_requestAccounts", []);
+        await establishSession({address: accounts[0]});
+    } catch (e) {
+        log("Connection failed: " + e.message);
     }
 }
 
+async function establishSession(account) {
+    userAddress = account.address || account;
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    signer = await provider.getSigner();
+
+    tokenContract = new ethers.Contract(TOKEN_ADDR, [/* ABI як раніше */], signer);
+    stakingContract = new ethers.Contract(STAKING_ADDR, [/* ABI як раніше */], signer);
+
+    showUI(true); // Показуємо меню та баланси
+    await syncData();
+    
+    // Перевірка адміна
+    const isAdmin = userAddress.toLowerCase() === OWNER_ADDR.toLowerCase();
+    document.querySelectorAll('.admin-only').forEach(el => el.style.display = isAdmin ? 'inline' : 'none');
+}
+
+function showUI(connected) {
+    document.getElementById('authSection').style.display = connected ? 'none' : 'block';
+    document.getElementById('mainNav').style.display = connected ? 'flex' : 'none';
+    document.getElementById('dataSection').style.display = connected ? 'block' : 'none';
+}
+
 function logout() {
-    // 1. Скидаємо змінні сесії
     userAddress = null;
     signer = null;
     
-    // 2. Очищаємо візуальні баланси (ECCYB та Газ)
-    const balEl = document.getElementById('userBalance');
-    const gasEl = document.getElementById('gasBalance');
+    // Очищення полів
+    if (document.getElementById('userBalance')) document.getElementById('userBalance').innerText = "-- ECCYB";
+    if (document.getElementById('gasBalance')) document.getElementById('gasBalance').innerText = "-- BTT";
     
-    if (balEl) balEl.innerText = "-- ECCYB";
-    if (gasEl) gasEl.innerText = "-- BTT"; // Додано очищення газу
-    
-    // 3. Виводимо повідомлення в консоль
+    showUI(false);
     log(i18n[currentLang].logOutMsg);
-    
-    // 4. Приховуємо елементи адміна
-    document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
-    
-    // 5. Опціонально: якщо ви хочете повністю розірвати зв'язок 
-    // і змусити користувача натиснути "Connect" знову при перезавантаженні:
-    localStorage.removeItem('connected'); 
 }
 
 window.onload = init;
