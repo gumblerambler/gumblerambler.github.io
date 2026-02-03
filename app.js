@@ -130,7 +130,7 @@ function logout() {
     document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
     
     // Опціонально: перезавантажити сторінку для повної безпеки
-    // window.location.reload(); 
+     window.location.reload(); 
 }
 
 window.onload = init;
