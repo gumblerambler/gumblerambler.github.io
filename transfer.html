@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ECCYB | Transfer</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/ethers@6.7.0/dist/ethers.umd.min.js"></script>
+</head>
+<body>
+<div class="container">
+    <nav><a href="index.html">← Back to Dashboard</a></nav>
+    <div class="panel">
+        <h3>Internal Asset Transfer</h3>
+        <input type="text" id="tTo" placeholder="Recipient Address (0x...)">
+        <input type="number" id="tAmt" placeholder="Amount (ECCYB)">
+        <button onclick="handleTx(tokenContract.transfer(document.getElementById('tTo').value, ethers.parseUnits(document.getElementById('tAmt').value, 18)))">Send Tokens</button>
+    </div>
+    <div id="console">Ready for transfer...</div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>
