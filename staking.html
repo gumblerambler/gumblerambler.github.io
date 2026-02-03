@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ECCYB | Staking</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/ethers@6.7.0/dist/ethers.umd.min.js"></script>
+</head>
+<body>
+<div class="container">
+    <nav><a href="index.html">← Back to Dashboard</a></nav>
+    <div class="panel">
+        <h3>Deposit Assets</h3>
+        <input type="number" id="sAmt" placeholder="Amount (ECCYB)">
+        <input type="number" id="sDays" placeholder="Term (Days)">
+        <button onclick="stakeNow()">Stake Tokens</button>
+    </div>
+    <div class="panel">
+        <h3>Withdrawal</h3>
+        <button class="btn-outline" onclick="handleTx(stakingContract.withdraw())">Claim Deposit + Bonus</button>
+        <button class="btn-danger" onclick="if(confirm('Lose bonus?')) handleTx(stakingContract.earlyWithdraw())">Early Withdrawal</button>
+    </div>
+    <div id="console">Ready for staking operations...</div>
+</div>
+<script src="app.js"></script>
+<script>
+    async function stakeNow() {
+        const amt = ethers.parseUnits(document.getElementById('sAmt').value, 18);
+        const days = document.getElementById('sDays').value;
+        log("Step 1: Approving tokens...");
+        const tx = await tokenContract.approve(STAKING_ADDR, amt);
+        await tx.wait();
+        log("Step 2: Staking...");
+        handleTx(stakingContract.stake(amt, days));
+    }
+</script>
+</body>
+</html>
