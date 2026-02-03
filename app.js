@@ -128,16 +128,16 @@ async function handleTx(txPromise) {
 }
 
 function logout() {
-    // 1. Очищаємо локальне сховище, щоб при переході на index.html 
-    // скрипт не намагався автоматично підключитися знову
-    localStorage.removeItem('eccyb_connected'); // якщо ви використовували прапорець автопідключення
+    userAddress = null;
+    signer = null;
     
-    // 2. Додаємо в URL параметр, щоб index.html знав, що треба показати повідомлення про вихід
-    // Це спрацює як: https://ваша-адреса.github.io/index.html?action=logout
-    const homeUrl = "index.html?action=logout";
+    // Очищення всіх полів балансу
+    if (document.getElementById('userBalance')) document.getElementById('userBalance').innerText = "-- ECCYB";
+    if (document.getElementById('eccybStat')) document.getElementById('eccybStat').innerText = "--";
+    if (document.getElementById('gasBalance')) document.getElementById('gasBalance').innerText = "-- BTT";
     
-    // 3. Переспрямовуємо
-    window.location.href = homeUrl;
+    // Переспрямування на головну з дією виходу
+    window.location.href = "index.html?action=logout";
 }
 
 function log(msg) { const c = document.getElementById('console'); if (c) c.innerHTML = `> ${msg}<br>` + c.innerHTML; }
