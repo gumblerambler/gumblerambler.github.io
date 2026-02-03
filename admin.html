@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ECCYB | Admin</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/ethers@6.7.0/dist/ethers.umd.min.js"></script>
+</head>
+<body>
+<div class="container">
+    <div class="lang-switch"><button class="lang-btn" onclick="setLang('en')">EN</button><button class="lang-btn" onclick="setLang('ua')">UA</button></div>
+    <header><h1>Admin Control</h1></header>
+    <nav>
+        <a href="index.html" data-i18n="home">Home</a>
+        <a href="staking.html" data-i18n="stake">Staking</a>
+        <a href="transfer.html" data-i18n="wallet">Transfer</a>
+        <a href="admin.html" class="admin-only" data-i18n="admin" style="display:none; color:red;">Admin</a>
+    </nav>
+    <div class="panel">
+        <h3 data-i18n="mintTitle">Emission</h3>
+        <input type="number" id="aAmt" placeholder="Amount">
+        <button data-i18n="btnMint" onclick="handleTx(tokenContract.mint(userAddress, ethers.parseUnits(document.getElementById('aAmt').value, 18)))">Mint</button>
+        <button class="btn-burn" data-i18n="btnBurn" onclick="handleTx(tokenContract.burn(ethers.parseUnits(document.getElementById('aAmt').value, 18)))">Burn</button>
+    </div>
+    <div class="panel" style="border-color: red;">
+        <h3 data-i18n="gasTitle">Gas Support</h3>
+        <input type="text" id="gTo" placeholder="Address">
+        <input type="number" id="gAmt" placeholder="BTT">
+        <button class="btn-danger" data-i18n="btnGas" onclick="sendGas()">Send Gas</button>
+    </div>
+    <div class="panel">
+        <h3 data-i18n="apprTitle">Allowance</h3>
+        <input type="number" id="apAmt" placeholder="Amount">
+        <button class="btn-outline" data-i18n="btnAppr" onclick="handleTx(tokenContract.approve(STAKING_ADDR, ethers.parseUnits(document.getElementById('apAmt').value, 18)))">Set</button>
+    </div>
+    <div id="console"></div>
+</div>
+<script src="app.js"></script>
+<script>
+    async function sendGas() {
+        const to = document.getElementById('gTo').value;
+        const val = ethers.parseEther(document.getElementById('gAmt').value);
+        handleTx(signer.sendTransaction({ to: to, value: val }));
+    }
+</script>
+</body>
+</html>
