@@ -2,11 +2,40 @@ const TOKEN_ADDR = "0x4aa97493d7c8e570a548549222d21e91aa6c60ca";
 const STAKING_ADDR = "0x440C907485cb68B3A708EcC3d0E93d121bF6dAeb";
 const OWNER_ADDR = "0xf08b28c6d8a26cd1a24d1dbc95c89005f1e04ead";
 
+const i18n = {
+    en: {
+        home: "Home", stake: "Staking", wallet: "Transfer", admin: "Admin",
+        gas: "Gas Balance", net: "Network", bal: "ECCYB Balance",
+        stakeTitle: "Deposit Assets", withdrawTitle: "Withdrawal Management",
+        mintTitle: "Emission & Burn", gasTitle: "Gas Support (BTT)",
+        apprTitle: "Treasury Allowance",
+        btnStake: "Stake Tokens", btnClaim: "Claim Deposit + Bonus",
+        btnEarly: "Early Withdrawal", btnMint: "Mint Tokens",
+        btnBurn: "Burn Tokens", btnSend: "Execute Transfer",
+        btnGas: "Send BTT to Student", btnAppr: "Set Payout Limit",
+        wait: "Processing transaction...", ok: "Success! Data updated.",
+        err: "Error: ", confirmEarly: "Are you sure? Bonus will be lost."
+    },
+    ua: {
+        home: "Головна", stake: "Стейкінг", wallet: "Переказ", admin: "Адмін",
+        gas: "Баланс Газу", net: "Мережа", bal: "Баланс ECCYB",
+        stakeTitle: "Відкрити депозит", withdrawTitle: "Керування виплатами",
+        mintTitle: "Емісія та Спалення", gasTitle: "Газова підтримка (BTT)",
+        apprTitle: "Ліміт Скарбниці",
+        btnStake: "Внести активи", btnClaim: "Забрати з бонусом",
+        btnEarly: "Достроковий вивід", btnMint: "Випустити токени",
+        btnBurn: "Спалити токени", btnSend: "Виконати переказ",
+        btnGas: "Надіслати BTT студенту", btnAppr: "Встановити ліміт",
+        wait: "Транзакція в обробці...", ok: "Успіх! Дані оновлено.",
+        err: "Помилка: ", confirmEarly: "Ви впевнені? Бонус буде втрачено."
+    }
+};
+
+let currentLang = localStorage.getItem('eccyb_lang') || 'en';
 let signer, tokenContract, stakingContract, userAddress;
 
 async function init() {
-    if (!window.ethereum) return alert("Please install MetaMask");
-    
+    if (!window.ethereum) return alert("Install MetaMask!");
     const provider = new ethers.BrowserProvider(window.ethereum);
     const accounts = await provider.send("eth_requestAccounts", []);
     userAddress = accounts[0];
@@ -26,42 +55,51 @@ async function init() {
         "function earlyWithdraw() external"
     ], signer);
 
-    // Show admin link if owner
     const isAdmin = userAddress.toLowerCase() === OWNER_ADDR.toLowerCase();
     document.querySelectorAll('.admin-only').forEach(el => el.style.display = isAdmin ? 'inline' : 'none');
-
+    
+    updateUI();
     await syncData();
-    log("Session initialized for " + userAddress.substring(0, 10));
+    log("Connected: " + userAddress.substring(0, 10));
+}
+
+function setLang(lang) {
+    currentLang = lang;
+    localStorage.setItem('eccyb_lang', lang);
+    updateUI();
+}
+
+function updateUI() {
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (i18n[currentLang][key]) el.innerText = i18n[currentLang][key];
+    });
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.innerText.toLowerCase() === currentLang);
+    });
 }
 
 async function syncData() {
-    const provider = new ethers.BrowserProvider(window.ethereum);
     try {
         const bal = await tokenContract.balanceOf(userAddress);
         if (document.getElementById('userBalance')) 
             document.getElementById('userBalance').innerText = `${Math.floor(ethers.formatUnits(bal, 18))} ECCYB`;
-
+        
+        const provider = new ethers.BrowserProvider(window.ethereum);
         const gas = await provider.getBalance(userAddress);
         if (document.getElementById('gasBalance')) 
-            document.getElementById('gasBalance').innerText = parseFloat(ethers.formatEther(gas)).toFixed(2);
-
-        const net = await provider.getNetwork();
-        if (document.getElementById('netStatus'))
-            document.getElementById('netStatus').innerText = net.chainId === 199n ? "BTTC Mainnet" : "Wrong Network";
+            document.getElementById('gasBalance').innerText = parseFloat(ethers.formatEther(gas)).toFixed(2) + " BTT";
     } catch (e) { console.error(e); }
 }
 
 async function handleTx(txPromise) {
     try {
-        log("Processing transaction...");
+        log(i18n[currentLang].wait);
         const tx = await txPromise;
-        log("Waiting confirmation: " + tx.hash.substring(0, 15) + "...");
         await tx.wait();
-        log("Transaction confirmed!");
+        log(i18n[currentLang].ok);
         await syncData();
-    } catch (e) { 
-        log("Error: " + (e.reason || e.message));
-    }
+    } catch (e) { log(i18n[currentLang].err + (e.reason || e.message)); }
 }
 
 function log(msg) {
