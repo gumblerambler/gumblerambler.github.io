@@ -5,21 +5,27 @@ const OWNER_ADDR = "0xf08b28c6d8a26cd1a24d1dbc95c89005f1e04ead";
 const i18n = {
     en: {
         home: "Home", stake: "Staking", wallet: "Transfer", admin: "Admin", logout: "Logout",
-        gas: "Gas", net: "Network", bal: "ECCYB",
-        descStake: "Earn rewards by locking your tokens for a selected period.",
-        descTrans: "Send ECCYB tokens to other students or wallets instantly.",
-        descAdmin: "Control emission, burn tokens, and support students with gas.",
-        btnStake: "Go to Staking", btnSend: "Go to Transfers", btnAdmin: "Go to Admin",
-        wait: "Processing...", ok: "Success!", logOutMsg: "Session ended.", connBtn: "Connect MetaMask"
+        gas: "Gas", bal: "ECCYB", connBtn: "Connect MetaMask", logOutMsg: "Session ended.",
+        wait: "Processing...", ok: "Success!",
+        // Розширені описи
+        titleStake: "Staking System",
+        infoStake: "This module allows you to lock your ECCYB tokens for a specific period to earn rewards. Early withdrawal is possible but results in the loss of accumulated bonuses.",
+        titleTrans: "Asset Transfers",
+        infoTrans: "Securely send ECCYB tokens to any wallet address within the BTTC network. Ensure you have enough BTT gas for the transaction to be processed.",
+        titleAdmin: "Administrative Tools",
+        infoAdmin: "Governance tools: manage emission, burn supply, and distribute gas (BTT) to students for transaction fees."
     },
     ua: {
         home: "Головна", stake: "Стейкінг", wallet: "Переказ", admin: "Адмін", logout: "Вийти",
-        gas: "Газ", net: "Мережа", bal: "Баланс",
-        descStake: "Отримуйте винагороду, блокуючи свої токени на обраний термін.",
-        descTrans: "Миттєво надсилайте токени ECCYB іншим студентам або на гаманці.",
-        descAdmin: "Керуйте емісією, спалюйте токени та підтримуйте студентів газом.",
-        btnStake: "Перейти до Стейкінгу", btnSend: "Перейти до Переказів", btnAdmin: "Панель керування",
-        wait: "Обробка...", ok: "Успішно!", logOutMsg: "Сесію завершено.", connBtn: "Підключити MetaMask"
+        gas: "Газ", bal: "ECCYB", connBtn: "Підключити MetaMask", logOutMsg: "Сесію завершено.",
+        wait: "Обробка...", ok: "Успішно!",
+        // Розширені описи
+        titleStake: "Система Стейкінгу",
+        infoStake: "Цей модуль дозволяє блокувати ваші токени ECCYB на певний термін для отримання винагороди. Дострокове виведення можливе, але призведе до втрати накопичених бонусів.",
+        titleTrans: "Переказ Активів",
+        infoTrans: "Безпечно надсилайте токени ECCYB на будь-яку адресу в мережі BTTC. Переконайтеся, що у вас достатньо BTT для оплати комісії мережі (газу).",
+        titleAdmin: "Інструменти Адміністратора",
+        infoAdmin: "Керування токеном: емісія нових активів, спалення надлишків та надання газової підтримки (BTT) студентам для оплати комісій."
     }
 };
 
@@ -43,9 +49,11 @@ async function init() {
 }
 
 async function connect() {
-    const provider = new ethers.BrowserProvider(window.ethereum);
-    const accounts = await provider.send("eth_requestAccounts", []);
-    await establishSession(accounts[0]);
+    try {
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const accounts = await provider.send("eth_requestAccounts", []);
+        await establishSession(accounts[0]);
+    } catch (e) { log("Connection rejected"); }
 }
 
 async function establishSession(addr) {
@@ -73,48 +81,30 @@ function updateUI() {
         const key = el.getAttribute('data-i18n');
         if (i18n[currentLang][key]) el.innerText = i18n[currentLang][key];
     });
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.innerText.toLowerCase() === currentLang);
+    });
 }
 
 async function syncData() {
-    if (!userAddress) return;
+    if(!userAddress) return;
     try {
-        const provider = new ethers.BrowserProvider(window.ethereum);
-
-        // 1. Отримання балансу ECCYB
         const bal = await tokenContract.balanceOf(userAddress);
-        const formattedBal = Math.floor(ethers.formatUnits(bal, 18));
+        const val = Math.floor(ethers.formatUnits(bal, 18));
+        if (document.getElementById('eccybStat')) document.getElementById('eccybStat').innerText = val;
         
-        // Оновлення великого балансу (на головній)
-        const balEl = document.getElementById('userBalance');
-        if (balEl) balEl.innerText = `${formattedBal} ECCYB`;
-        
-        // Оновлення балансу в статус-барі (на всіх сторінках)
-        const eccybStat = document.getElementById('eccybStat');
-        if (eccybStat) eccybStat.innerText = formattedBal;
-
-        // 2. Оновлення балансу Газу (BTT)
+        const provider = new ethers.BrowserProvider(window.ethereum);
         const gas = await provider.getBalance(userAddress);
-        const gasEl = document.getElementById('gasBalance');
-        if (gasEl) {
-            gasEl.innerText = parseFloat(ethers.formatEther(gas)).toFixed(4) + " BTT";
-        }
-    } catch (e) { 
-        console.error("Sync Error:", e); 
-    }
+        if (document.getElementById('gasBalance')) document.getElementById('gasBalance').innerText = parseFloat(ethers.formatEther(gas)).toFixed(4) + " BTT";
+    } catch (e) { console.error(e); }
 }
 
-function logout() {
-    userAddress = null;
-    signer = null;
-    
-    // Очищення всіх полів балансу
-    if (document.getElementById('userBalance')) document.getElementById('userBalance').innerText = "-- ECCYB";
-    if (document.getElementById('eccybStat')) document.getElementById('eccybStat').innerText = "--";
-    if (document.getElementById('gasBalance')) document.getElementById('gasBalance').innerText = "-- BTT";
-    
-    // Переспрямування на головну з дією виходу
-    window.location.href = "index.html?action=logout";
-}
-
+function logout() { window.location.href = "index.html?action=logout"; }
 function log(msg) { const c = document.getElementById('console'); if (c) c.innerHTML = `> ${msg}<br>` + c.innerHTML; }
+
+async function handleTx(txPromise) {
+    try { log(i18n[currentLang].wait); const tx = await txPromise; await tx.wait(); log(i18n[currentLang].ok); await syncData(); }
+    catch (e) { log("Error: " + (e.reason || e.message)); }
+}
+
 window.onload = init;
