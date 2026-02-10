@@ -1,20 +1,32 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8"><title>ECCYB | Admin</title>
+    <meta charset="UTF-8">
+    <title>ECCYB | Admin</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://unpkg.com/ethers@6.7.0/dist/ethers.umd.min.js"></script>
 </head>
 <body>
 <div class="container">
-    <div class="lang-switch"><button class="lang-btn" onclick="setLang('en')\">EN</button><button class="lang-btn" onclick="setLang('ua')\">UA</button></div>
-    <header><h1>Admin Control</h1></header>
-    <div id="authSection" style="text-align: center; padding: 40px;"><button onclick="connect()" data-i18n="connBtn">Connect</button></div>
+    <div class="lang-switch">
+        <button class="lang-btn" onclick="setLang('en')">EN</button>
+        <button class="lang-btn" onclick="setLang('ua')">UA</button>
+    </div>
+
+    <header><h1 data-i18n="adminTitle">Admin Control</h1></header>
+
+    <div id="authSection" style="text-align: center; padding: 40px;">
+        <button onclick="connect()" data-i18n="connBtn">Connect</button>
+    </div>
+
     <nav id="mainNav" style="display:none;">
-        <a href="index.html" data-i18n="home">Home</a><a href="staking.html" data-i18n="stake">Staking</a><a href="transfer.html" data-i18n="wallet">Transfer</a>
+        <a href="index.html" data-i18n="home">Home</a>
+        <a href="staking.html" data-i18n="stake">Staking</a>
+        <a href="transfer.html" data-i18n="wallet">Transfer</a>
         <a href="admin.html" class="admin-only" data-i18n="admin" style="display:none; color:red;">Admin</a>
         <a href="#" onclick="logout(); return false;" data-i18n="logout" style="color:#666;">Logout</a>
     </nav>
+
     <div id="dataSection" style="display:none;">
         <div class="status-bar">
             <div class="status-item">
@@ -27,16 +39,16 @@
                 <strong data-i18n="gas">Gas</strong>: <span id="gasBalance">-- BTT</span>
             </div>
             <div class="status-item">
-                <strong>Network</strong>: <span style="color: #2a9d8f;">BTTC</span>
+                <strong data-i18n="network">Network</strong>: <span style="color: #2a9d8f;">BTTC</span>
             </div>
         </div>
 
         <div class="panel" style="border-color: #2a9d8f;">
-            <h3 style="color: #2a9d8f;">Database Grant (MySQL)</h3>
-            <p style="font-size: 0.8em; margin-bottom: 10px; color: #666;">Встановлює стартовий капітал студента в базі даних.</p>
-            <input type="text" id="targetStudent" placeholder="Student Address 0x...">
+            <h3 style="color: #2a9d8f;" data-i18n="dbGrantTitle">Database Grant (MySQL)</h3>
+            <p style="font-size: 0.8em; margin-bottom: 10px; color: #666;" data-i18n="dbGrantDesc">Встановлює стартовий капітал студента в базі даних.</p>
+            <input type="text" id="targetStudent" placeholder="0x... (Student Address)">
             <input type="number" id="grantAmt" placeholder="Amount ECCYB">
-            <button style="background: #2a9d8f;" onclick="sendGrant()">Issue Capital Grant</button>
+            <button style="background: #2a9d8f;" onclick="sendGrant()" data-i18n="btnIssueGrant">Issue Capital Grant</button>
         </div>
 
         <div class="panel">
@@ -48,43 +60,72 @@
 
         <div class="panel" style="border-color: var(--u-danger);">
             <h3 data-i18n="gasTitle">Gas Support (BTT)</h3>
-            <input type="text" id="gTo" placeholder="Student Address 0x...">
+            <input type="text" id="gTo" placeholder="0x... (Student Address)">
             <input type="number" id="gAmt" placeholder="Amount BTT">
             <button class="btn-danger" data-i18n="btnGas" onclick="sendGas()">Send BTT</button>
         </div>
     </div>
+    
     <div id="console"></div>
 </div>
+
 <script src="app.js"></script>
+
 <script>
+    // Додаємо нові ключі перекладу в існуючий i18n об'єкт з app.js
+    // Це дозволить кнопкам setLang('ua') перекладати специфічні адмін-поля
+    const adminTranslations = {
+        en: {
+            adminTitle: "Admin Control",
+            dbGrantTitle: "Database Grant (MySQL)",
+            dbGrantDesc: "Set student's starting capital in the database.",
+            btnIssueGrant: "Issue Capital Grant",
+            mintTitle: "Tokens (Blockchain)",
+            gasTitle: "Gas Support (BTT)",
+            network: "Network"
+        },
+        ua: {
+            adminTitle: "Панель Адміністратора",
+            dbGrantTitle: "Грант Бази Даних (MySQL)",
+            dbGrantDesc: "Встановлює стартовий капітал студента в базі даних.",
+            btnIssueGrant: "Видати капітал",
+            mintTitle: "Токени (Блокчейн)",
+            gasTitle: "Газова підтримка (BTT)",
+            network: "Мережа"
+        }
+    };
+
+    // Розширюємо i18n з app.js
+    Object.assign(i18n.en, adminTranslations.en);
+    Object.assign(i18n.ua, adminTranslations.ua);
+
+    // Функція видачі BTT
     async function sendGas() {
-        const to = document.getElementById('gTo').value; 
+        const to = document.getElementById('gTo').value.trim(); 
         const amt = document.getElementById('gAmt').value;
-        if(!to || !amt) return;
+        if(!to || !amt) { log("Fill address and amount"); return; }
         try {
-            log("Sending BTT...");
-            const tx = await signer.sendTransaction({
-                to: to,
-                value: ethers.parseEther(amt)
-            });
+            log(i18n[currentLang].wait);
+            const val = ethers.parseEther(amt);
+            const tx = await signer.sendTransaction({ to, value: val });
             await tx.wait();
-            log("Gas sent!");
-            syncData();
+            log(i18n[currentLang].ok);
+            await syncData();
         } catch(e) { log("Error: " + e.message); }
     }
 
-    // Також додаємо функцію sendGrant безпосередньо в цей файл для надійності
+    // Функція видачі гранту (MySQL)
     async function sendGrant() {
         const studentAddr = document.getElementById('targetStudent').value.trim();
         const amount = document.getElementById('grantAmt').value;
 
         if (!studentAddr || !amount) {
-            alert("Заповніть адресу та суму");
+            log(currentLang === 'ua' ? "Заповніть поля" : "Fill all fields");
             return;
         }
 
         try {
-            log("Надсилання гранту в базу...");
+            log(i18n[currentLang].wait);
             const response = await fetch(`${API_URL}?action=give_grant`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -97,15 +138,18 @@
 
             const result = await response.json();
             if (result.status === "success") {
-                log(`Грант ${amount} успішно видано для ${studentAddr.substring(0,8)}...`);
+                log(i18n[currentLang].ok);
                 document.getElementById('grantAmt').value = '';
             } else {
-                log("Помилка: " + result.message);
+                log("Error: " + result.message);
             }
-        } catch (e) {
-            log("Помилка мережі: " + e.message);
-        }
+        } catch (e) { log("Network error: " + e.message); }
     }
+
+    // Примусово оновлюємо інтерфейс після завантаження
+    window.addEventListener('load', () => {
+        setTimeout(updateUI, 100); 
+    });
 </script>
 </body>
 </html>
