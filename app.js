@@ -8,10 +8,10 @@ const API_URL = "https://projects.eccyb.org/app/api.php";
 const i18n = {
     en: {
         home: "Home", stake: "Staking", wallet: "Transfer", admin: "Admin", logout: "Logout",
-        gas: "Gas", bal: "Capital", connBtn: "Connect MetaMask", logOutMsg: "Session ended.",
+        gas: "Gas", bal: "Token", connBtn: "Connect MetaMask", logOutMsg: "Session ended.",
         wait: "Processing...", ok: "Success!", stakeTitle: "Deposit", withdrawTitle: "Withdraw",
         btnStake: "Stake", btnClaim: "Claim", btnEarly: "Early exit", btnSend: "Send",
-        titleStake: "Business Investment", capital: "Grant",
+        titleStake: "Business Investment", capital: "Capital",
         infoStake: "Invest your capital into projects. This module locks tokens for a specific period to earn business revenue. Early exit forfeits the profit.",
         titleTrans: "Asset Transfers",
         infoTrans: "Securely send ECCYB tokens to other business entities within the BTTC network.",
@@ -20,11 +20,11 @@ const i18n = {
     },
     ua: {
         home: "Головна", stake: "Стейкінг", wallet: "Переказ", admin: "Адмін", logout: "Вийти",
-        gas: "Газ", bal: "Капітал", connBtn: "Підключити MetaMask", logOutMsg: "Сесію завершено.",
+        gas: "Газ", bal: "Токен", connBtn: "Підключити MetaMask", logOutMsg: "Сесію завершено.",
         wait: "Обробка...", ok: "Успішно!", stakeTitle: "Депозит",  withdrawTitle: "Повернення",
         btnStake: "Вкласти", btnClaim: "Повернути з прибутком", btnEarly: "Повернути без прибутку",
         btnSend: "Перевести",
-        titleStake: "Господарські інвестиції", capital: "Грант",
+        titleStake: "Господарські інвестиції", capital: "Капітал",
         infoStake: "Інвестуйте капітал у проекти. Цей модуль блокує токени на певний термін для отримання прибутку. Дострокове виведення скасовує бонус.",
         titleTrans: "Переказ активів",
         infoTrans: "Безпечно надсилайте токени ECCYB іншим підрозділам у мережі BTTC.",
