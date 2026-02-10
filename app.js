@@ -2,33 +2,34 @@ const TOKEN_ADDR = "0x4aa97493d7c8e570a548549222d21e91aa6c60ca";
 const STAKING_ADDR = "0x440C907485cb68B3A708EcC3d0E93d121bF6dAeb";
 const OWNER_ADDR = "0xf08b28c6d8a26cd1a24d1dbc95c89005f1e04ead";
 
+// Адреса вашого бекенду на s-host (замініть на реальну)
+const API_URL = "https://ваш-домен.s-host.com.ua/api.php";
+
 const i18n = {
     en: {
         home: "Home", stake: "Staking", wallet: "Transfer", admin: "Admin", logout: "Logout",
-        gas: "Gas", bal: "Token", connBtn: "Connect MetaMask", logOutMsg: "Session ended.",
+        gas: "Gas", bal: "Capital", connBtn: "Connect MetaMask", logOutMsg: "Session ended.",
         wait: "Processing...", ok: "Success!", stakeTitle: "Deposit", withdrawTitle: "Withdraw",
         btnStake: "Stake", btnClaim: "Claim", btnEarly: "Early exit", btnSend: "Send",
-        // Розширені описи
-        titleStake: "Staking System",
-        infoStake: "This module allows you to lock your ECCYB tokens for a specific period to earn rewards. Early withdrawal is possible but results in the loss of accumulated bonuses.",
+        titleStake: "Business Investment",
+        infoStake: "Invest your capital into projects. This module locks tokens for a specific period to earn business revenue. Early exit forfeits the profit.",
         titleTrans: "Asset Transfers",
-        infoTrans: "Securely send ECCYB tokens to any wallet address within the BTTC network. Ensure you have enough BTT gas for the transaction to be processed.",
-        titleAdmin: "Administrative Tools",
-        infoAdmin: "Governance tools: manage emission, burn supply, and distribute gas (BTT) to students for transaction fees."
+        infoTrans: "Securely send ECCYB tokens to other business entities within the BTTC network.",
+        titleAdmin: "Treasury Control",
+        infoAdmin: "Management of the firm's central treasury: audit student balances, distribute initial grants, and gas support."
     },
     ua: {
         home: "Головна", stake: "Стейкінг", wallet: "Переказ", admin: "Адмін", logout: "Вийти",
-        gas: "Газ", bal: "Токен", connBtn: "Підключити MetaMask", logOutMsg: "Сесію завершено.",
+        gas: "Газ", bal: "Капітал", connBtn: "Підключити MetaMask", logOutMsg: "Сесію завершено.",
         wait: "Обробка...", ok: "Успішно!", stakeTitle: "Депозит",  withdrawTitle: "Повернення",
-        btnStake: "Вкласти", btnClaim: "Повернути з відсотками", btnEarly: "Повернути без відсотків",
+        btnStake: "Вкласти", btnClaim: "Повернути з прибутком", btnEarly: "Повернути без прибутку",
         btnSend: "Перевести",
-        // Розширені описи
-        titleStake: "Система Стейкінгу",
-        infoStake: "Цей модуль дозволяє блокувати ваші токени ECCYB на певний термін для отримання винагороди. Дострокове виведення можливе, але призведе до втрати накопичених бонусів.",
-        titleTrans: "Переказ Активів",
-        infoTrans: "Безпечно надсилайте токени ECCYB на будь-яку адресу в мережі BTTC. Переконайтеся, що у вас достатньо BTT для оплати комісії мережі (газу).",
-        titleAdmin: "Інструменти Адміністратора",
-        infoAdmin: "Керування токеном: емісія нових активів, спалення надлишків та надання газової підтримки (BTT) студентам для оплати комісій."
+        titleStake: "Господарські інвестиції",
+        infoStake: "Інвестуйте капітал у проекти. Цей модуль блокує токени на певний термін для отримання прибутку. Дострокове виведення скасовує бонус.",
+        titleTrans: "Переказ активів",
+        infoTrans: "Безпечно надсилайте токени ECCYB іншим підрозділам у мережі BTTC.",
+        titleAdmin: "Керування казною",
+        infoAdmin: "Інструменти фінансового директора: аудит балансів студентів, видача початкових грантів та підтримка газом (BTT)."
     }
 };
 
@@ -64,22 +65,47 @@ async function establishSession(addr) {
     const provider = new ethers.BrowserProvider(window.ethereum);
     signer = await provider.getSigner();
     
-    tokenContract = new ethers.Contract(TOKEN_ADDR, ["function balanceOf(address) view returns (uint256)", "function transfer(address, uint256) returns (bool)", "function approve(address, uint256) returns (bool)", "function mint(address, uint256) public", "function burn(uint256) public"], signer);
-    stakingContract = new ethers.Contract(STAKING_ADDR, ["function stake(uint256, uint256) external", "function withdraw() external", "function earlyWithdraw() external"], signer);
+    tokenContract = new ethers.Contract(TOKEN_ADDR, [
+        "function balanceOf(address) view returns (uint256)", 
+        "function transfer(address, uint256) returns (bool)", 
+        "function approve(address, uint256) returns (bool)", 
+        "function mint(address, uint256) public", 
+        "function burn(uint256) public"
+    ], signer);
+    
+    stakingContract = new ethers.Contract(STAKING_ADDR, [
+        "function stake(uint256, uint256) external", 
+        "function withdraw() external", 
+        "function earlyWithdraw() external"
+    ], signer);
+
+    // Синхронізація з MySQL бекендом
+    await syncWithBackend(userAddress);
  
     showUI(true);
     await syncData();
 
-    // ПРАВИЛЬНЕ ВІДОБРАЖЕННЯ АДМІН-ПАНЕЛІ
     const isAdmin = userAddress.toLowerCase() === OWNER_ADDR.toLowerCase();
     document.querySelectorAll('.admin-only').forEach(el => {
-        if (isAdmin) {
-            // Використовуємо block для панелей, щоб вони не вирівнювалися в рядок
-            el.style.setProperty('display', 'block', 'important');
-        } else {
-            el.style.setProperty('display', 'none', 'important');
-        }
+        el.style.setProperty('display', isAdmin ? 'block' : 'none', 'important');
     });
+}
+
+// Нова функція для роботи з PHP API
+async function syncWithBackend(address) {
+    try {
+        const response = await fetch(`${API_URL}?action=login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ address: address })
+        });
+        const result = await response.json();
+        if (result.status === "success") {
+            console.log("MySQL sync ok:", result.data);
+        }
+    } catch (e) {
+        console.warn("Backend unavailable. Working in blockchain-only mode.");
+    }
 }
 
 function showUI(connected) {
@@ -109,7 +135,7 @@ async function syncData() {
         
         const provider = new ethers.BrowserProvider(window.ethereum);
         const gas = await provider.getBalance(userAddress);
-        if (document.getElementById('gasBalance')) document.getElementById('gasBalance').innerText = parseFloat(ethers.formatEther(gas)).toFixed(4) + " BTT";
+        if (document.getElementById('gasBalance')) document.getElementById('gasBalance').innerText = parseFloat(ethers.formatEther(gas)).toFixed(4);
     } catch (e) { console.error(e); }
 }
 
@@ -117,8 +143,15 @@ function logout() { window.location.href = "index.html?action=logout"; }
 function log(msg) { const c = document.getElementById('console'); if (c) c.innerHTML = `> ${msg}<br>` + c.innerHTML; }
 
 async function handleTx(txPromise) {
-    try { log(i18n[currentLang].wait); const tx = await txPromise; await tx.wait(); log(i18n[currentLang].ok); await syncData(); }
-    catch (e) { log("Error: " + (e.reason || e.message)); }
+    try { 
+        log(i18n[currentLang].wait); 
+        const tx = await txPromise; 
+        await tx.wait(); 
+        log(i18n[currentLang].ok); 
+        await syncData(); 
+    } catch (e) { 
+        log("Error: " + (e.reason || e.message)); 
+    }
 }
 
 window.onload = init;
