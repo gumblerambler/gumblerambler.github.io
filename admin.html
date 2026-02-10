@@ -7,7 +7,7 @@
 </head>
 <body>
 <div class="container">
-    <div class="lang-switch"><button class="lang-btn" onclick="setLang('en')">EN</button><button class="lang-btn" onclick="setLang('ua')">UA</button></div>
+    <div class="lang-switch"><button class="lang-btn" onclick="setLang('en')\">EN</button><button class="lang-btn" onclick="setLang('ua')\">UA</button></div>
     <header><h1>Admin Control</h1></header>
     <div id="authSection" style="text-align: center; padding: 40px;"><button onclick="connect()" data-i18n="connBtn">Connect</button></div>
     <nav id="mainNav" style="display:none;">
@@ -18,7 +18,7 @@
     <div id="dataSection" style="display:none;">
         <div class="status-bar">
             <div class="status-item">
-                <strong data-i18n="bal">Token</strong>: <span id="eccybStat">--</span> ECCYB
+                <strong data-i18n="bal">Token</strong>: <span id="eccybStat">--</span>
             </div>
             <div class="status-item">
                 <strong data-i18n="gas">Gas</strong>: <span id="gasBalance">-- BTT</span>
@@ -27,14 +27,24 @@
                 <strong>Network</strong>: BTTC
             </div>
         </div>
+
+        <div class="panel" style="border-color: #2a9d8f;">
+            <h3 style="color: #2a9d8f;">Database Grant (MySQL)</h3>
+            <p style="font-size: 0.8em; margin-bottom: 10px; color: #666;">Встановлює стартовий капітал студента в базі даних.</p>
+            <input type="text" id="targetStudent" placeholder="Student Address 0x...">
+            <input type="number" id="grantAmt" placeholder="Amount ECCYB">
+            <button style="background: #2a9d8f;" onclick="sendGrant()">Issue Capital Grant</button>
+        </div>
+
         <div class="panel">
-            <h3 data-i18n="mintTitle">Tokens</h3>
+            <h3 data-i18n="mintTitle">Tokens (Blockchain)</h3>
             <input type="number" id="aAmt" placeholder="Amount">
             <button data-i18n="btnMint" onclick="handleTx(tokenContract.mint(userAddress, ethers.parseUnits(document.getElementById('aAmt').value, 18)))">Mint</button>
             <button class="btn-burn" data-i18n="btnBurn" onclick="handleTx(tokenContract.burn(ethers.parseUnits(document.getElementById('aAmt').value, 18)))">Burn</button>
         </div>
+
         <div class="panel" style="border-color: var(--u-danger);">
-            <h3 data-i18n="gasTitle">Gas Support</h3>
+            <h3 data-i18n="gasTitle">Gas Support (BTT)</h3>
             <input type="text" id="gTo" placeholder="Student Address 0x...">
             <input type="number" id="gAmt" placeholder="Amount BTT">
             <button class="btn-danger" data-i18n="btnGas" onclick="sendGas()">Send BTT</button>
@@ -46,8 +56,52 @@
 <script>
     async function sendGas() {
         const to = document.getElementById('gTo').value; 
-        const val = ethers.parseEther(document.getElementById('gAmt').value);
-        handleTx(signer.sendTransaction({ to, value: val }));
+        const amt = document.getElementById('gAmt').value;
+        if(!to || !amt) return;
+        try {
+            log("Sending BTT...");
+            const tx = await signer.sendTransaction({
+                to: to,
+                value: ethers.parseEther(amt)
+            });
+            await tx.wait();
+            log("Gas sent!");
+            syncData();
+        } catch(e) { log("Error: " + e.message); }
+    }
+
+    // Також додаємо функцію sendGrant безпосередньо в цей файл для надійності
+    async function sendGrant() {
+        const studentAddr = document.getElementById('targetStudent').value.trim();
+        const amount = document.getElementById('grantAmt').value;
+
+        if (!studentAddr || !amount) {
+            alert("Заповніть адресу та суму");
+            return;
+        }
+
+        try {
+            log("Надсилання гранту в базу...");
+            const response = await fetch(`${API_URL}?action=give_grant`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    admin_address: userAddress,
+                    student_address: studentAddr,
+                    amount: amount
+                })
+            });
+
+            const result = await response.json();
+            if (result.status === "success") {
+                log(`Грант ${amount} успішно видано для ${studentAddr.substring(0,8)}...`);
+                document.getElementById('grantAmt').value = '';
+            } else {
+                log("Помилка: " + result.message);
+            }
+        } catch (e) {
+            log("Помилка мережі: " + e.message);
+        }
     }
 </script>
 </body>
