@@ -139,6 +139,42 @@ async function syncData() {
     } catch (e) { console.error(e); }
 }
 
+async function sendGrant() {
+    // Отримуємо значення з полів вводу index.html
+    const studentAddr = document.getElementById('targetStudent').value.trim();
+    const amount = document.getElementById('grantAmt').value;
+
+    if (!studentAddr || !amount) {
+        log("Please enter address and amount");
+        return;
+    }
+
+    try {
+        log("Sending grant to database...");
+        const response = await fetch(`${API_URL}?action=give_grant`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                admin_address: userAddress, // Ваш гаманець (має збігатися з OWNER_ADDR)
+                student_address: studentAddr,
+                amount: amount
+            })
+        });
+
+        const result = await response.json();
+        
+        if (result.status === "success") {
+            log(`Success: ${amount} capital allocated to ${studentAddr.substring(0,8)}...`);
+            // Очищуємо поля після успіху
+            document.getElementById('grantAmt').value = '';
+        } else {
+            log("Grant failed: " + result.message);
+        }
+    } catch (e) {
+        log("Network error: " + e.message);
+    }
+}
+
 function logout() { window.location.href = "index.html?action=logout"; }
 function log(msg) { const c = document.getElementById('console'); if (c) c.innerHTML = `> ${msg}<br>` + c.innerHTML; }
 
