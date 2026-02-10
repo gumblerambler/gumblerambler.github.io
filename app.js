@@ -11,7 +11,7 @@ const i18n = {
         gas: "Gas", bal: "Capital", connBtn: "Connect MetaMask", logOutMsg: "Session ended.",
         wait: "Processing...", ok: "Success!", stakeTitle: "Deposit", withdrawTitle: "Withdraw",
         btnStake: "Stake", btnClaim: "Claim", btnEarly: "Early exit", btnSend: "Send",
-        titleStake: "Business Investment",
+        titleStake: "Business Investment", capital: "Capital",
         infoStake: "Invest your capital into projects. This module locks tokens for a specific period to earn business revenue. Early exit forfeits the profit.",
         titleTrans: "Asset Transfers",
         infoTrans: "Securely send ECCYB tokens to other business entities within the BTTC network.",
@@ -24,7 +24,7 @@ const i18n = {
         wait: "Обробка...", ok: "Успішно!", stakeTitle: "Депозит",  withdrawTitle: "Повернення",
         btnStake: "Вкласти", btnClaim: "Повернути з прибутком", btnEarly: "Повернути без прибутку",
         btnSend: "Перевести",
-        titleStake: "Господарські інвестиції",
+        titleStake: "Господарські інвестиції", capital: "Каітал",
         infoStake: "Інвестуйте капітал у проекти. Цей модуль блокує токени на певний термін для отримання прибутку. Дострокове виведення скасовує бонус.",
         titleTrans: "Переказ активів",
         infoTrans: "Безпечно надсилайте токени ECCYB іншим підрозділам у мережі BTTC.",
@@ -100,11 +100,20 @@ async function syncWithBackend(address) {
             body: JSON.stringify({ address: address })
         });
         const result = await response.json();
-        if (result.status === "success") {
+        
+        if (result.status === "success" && result.data) {
             console.log("MySQL sync ok:", result.data);
+            
+            // Виводимо капітал у статус-бар
+            const capElement = document.getElementById('dbCapital');
+            if (capElement) {
+                // Округлюємо до 2 знаків для краси
+                const capValue = parseFloat(result.data.capital_allocated).toFixed(2);
+                capElement.innerText = capValue + " ECCYB";
+            }
         }
     } catch (e) {
-        console.warn("Backend unavailable. Working in blockchain-only mode.");
+        console.warn("Backend unavailable. Capital not loaded.");
     }
 }
 
