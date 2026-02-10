@@ -3,7 +3,7 @@ const STAKING_ADDR = "0x440C907485cb68B3A708EcC3d0E93d121bF6dAeb";
 const OWNER_ADDR = "0xf08b28c6d8a26cd1a24d1dbc95c89005f1e04ead";
 
 // Адреса вашого бекенду на s-host (замініть на реальну)
-const API_URL = "https://ваш-домен.s-host.com.ua/api.php";
+const API_URL = "https://projects.eccyb.org/app/api.php";
 
 const i18n = {
     en: {
