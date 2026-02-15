@@ -164,7 +164,8 @@ async function establishSession(addr) {
 
 async function syncWithBackend(address) {
     try {
-        const response = await fetch(`${API_URL}?action=login`, {
+        console.log("Fetching capital for:", address);
+        const response = await fetch(`${API_URL}?action=login`, { // або login_email
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ address: address })
@@ -172,23 +173,19 @@ async function syncWithBackend(address) {
         const result = await response.json();
         
         if (result.status === "success" && result.data) {
-            console.log("MySQL data received:", result.data);
+            console.log("Database Response:", result.data);
             
-            // Використовуємо інтервал, щоб дочекатися появи елемента, якщо сторінка ще вантажиться
-            const updateInterval = setInterval(() => {
-                const capElement = document.getElementById('dbCapital');
-                if (capElement) {
-                    const capValue = parseFloat(result.data.capital_allocated).toFixed(2);
-                    capElement.innerText = capValue + " ECCYB";
-                    clearInterval(updateInterval); // Зупиняємо пошук, коли оновили
-                }
-            }, 100);
-            
-            // Зупиняємо пошук через 5 секунд у будь-якому випадку (захист від нескінченного циклу)
-            setTimeout(() => clearInterval(updateInterval), 5000);
+            const capElement = document.getElementById('dbCapital');
+            if (capElement) {
+                // capital_allocated - це назва стовпця у вашій базі
+                const val = parseFloat(result.data.capital_allocated || 0).toFixed(2);
+                capElement.innerText = val + " ECCYB";
+            } else {
+                console.error("Element with ID 'dbCapital' not found in HTML!");
+            }
         }
     } catch (e) {
-        console.error("Backend error:", e);
+        console.error("Backend Sync Error:", e);
     }
 }
 
