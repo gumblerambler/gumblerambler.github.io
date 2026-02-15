@@ -163,29 +163,39 @@ async function establishSession(addr) {
 }
 
 async function syncWithBackend(address) {
+    if (!address) return;
     try {
-        console.log("Fetching capital for:", address);
-        const response = await fetch(`${API_URL}?action=login`, { // або login_email
+        console.log("🚀 Sending request to PHP for address:", address);
+        
+        // Використовуємо action=login, бо він повертає дані профілю
+        const response = await fetch(`${API_URL}?action=login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ address: address })
+            body: JSON.stringify({ address: address.toLowerCase() })
         });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
         const result = await response.json();
+        console.log("✅ Full Backend Response:", result);
         
         if (result.status === "success" && result.data) {
-            console.log("Database Response:", result.data);
-            
             const capElement = document.getElementById('dbCapital');
             if (capElement) {
-                // capital_allocated - це назва стовпця у вашій базі
-                const val = parseFloat(result.data.capital_allocated || 0).toFixed(2);
-                capElement.innerText = val + " ECCYB";
+                // ВАЖЛИВО: перевіряємо точну назву ключа з бази
+                const amount = result.data.capital_allocated || "0.00";
+                capElement.innerText = parseFloat(amount).toFixed(2) + " ECCYB";
+                console.log("💰 UI Updated with Capital:", amount);
             } else {
-                console.error("Element with ID 'dbCapital' not found in HTML!");
+                console.error("❌ Element #dbCapital not found on this page!");
             }
+        } else {
+            console.warn("⚠️ Backend returned success:false or empty data", result);
         }
     } catch (e) {
-        console.error("Backend Sync Error:", e);
+        console.error("❌ Critical Backend Sync Error:", e);
     }
 }
 
