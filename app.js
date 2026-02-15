@@ -64,43 +64,45 @@ async function emailLogin() {
     if (!email || !pass) return;
 
     try {
-        log("Authenticating...");
-        // ВИПРАВЛЕННО: Відправляємо JSON замість URLSearchParams
         const response = await fetch(API_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'login_email', email: email, password: pass })
+            body: JSON.stringify({ 
+                action: 'login_email', // Передаємо екшн тут
+                email: email, 
+                password: pass 
+            })
         });
 
         const result = await response.json();
         if (result.status === "success") {
-            sessionStorage.setItem('isLoggedIn', 'true'); // Встановлюємо сесію
-            userAddress = result.data.wallet_address;
-            await establishSession(userAddress);
+            sessionStorage.setItem('isLoggedIn', 'true');
+            await establishSession(result.data.wallet_address);
+            showUI(true);
         } else {
             alert(result.message);
         }
-    } catch (e) { console.error("Login error:", e); }
+    } catch (e) { console.error(e); }
 }
 
 async function syncWithBackend(address) {
     if (!address) return;
     try {
-        // ВИПРАВЛЕННО: Використовуємо JSON та екшен get_profile
         const response = await fetch(API_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'get_profile', address: address.toLowerCase() })
+            body: JSON.stringify({ 
+                action: 'login', // Екшн для отримання капіталу
+                address: address.toLowerCase() 
+            })
         });
 
         const result = await response.json();
         if (result.status === "success" && result.data) {
-            const capElement = document.getElementById('dbCapital');
-            if (capElement) {
-                capElement.innerText = parseFloat(result.data.capital_allocated || 0).toFixed(2) + " ECCYB";
-            }
+            const cap = document.getElementById('dbCapital');
+            if (cap) cap.innerText = parseFloat(result.data.capital_allocated || 0).toFixed(2) + " ECCYB";
         }
-    } catch (e) { console.error("Sync error:", e); }
+    } catch (e) { console.error(e); }
 }
 
 
