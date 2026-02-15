@@ -162,7 +162,6 @@ async function establishSession(addr) {
     });
 }
 
-// Нова функція для роботи з PHP API
 async function syncWithBackend(address) {
     try {
         const response = await fetch(`${API_URL}?action=login`, {
@@ -173,18 +172,23 @@ async function syncWithBackend(address) {
         const result = await response.json();
         
         if (result.status === "success" && result.data) {
-            console.log("MySQL sync ok:", result.data);
+            console.log("MySQL data received:", result.data);
             
-            // Виводимо капітал у статус-бар
-            const capElement = document.getElementById('dbCapital');
-            if (capElement) {
-                // Округлюємо до 2 знаків для краси
-                const capValue = parseFloat(result.data.capital_allocated).toFixed(2);
-                capElement.innerText = capValue + " ECCYB";
-            }
+            // Використовуємо інтервал, щоб дочекатися появи елемента, якщо сторінка ще вантажиться
+            const updateInterval = setInterval(() => {
+                const capElement = document.getElementById('dbCapital');
+                if (capElement) {
+                    const capValue = parseFloat(result.data.capital_allocated).toFixed(2);
+                    capElement.innerText = capValue + " ECCYB";
+                    clearInterval(updateInterval); // Зупиняємо пошук, коли оновили
+                }
+            }, 100);
+            
+            // Зупиняємо пошук через 5 секунд у будь-якому випадку (захист від нескінченного циклу)
+            setTimeout(() => clearInterval(updateInterval), 5000);
         }
     } catch (e) {
-        console.warn("Backend unavailable. Capital not loaded.");
+        console.error("Backend error:", e);
     }
 }
 
