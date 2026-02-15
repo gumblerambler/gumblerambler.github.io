@@ -41,7 +41,6 @@ let signer, tokenContract, stakingContract, userAddress;
 async function init() {
     updateUI();
     if (window.ethereum) {
-        // ВИПРАВЛЕННЯ: Скидання сесії при зміні гаманця
         window.ethereum.on('accountsChanged', function () {
             sessionStorage.removeItem('isLoggedIn');
             window.location.reload();
@@ -52,6 +51,7 @@ async function init() {
 
         if (accounts.length > 0 && loggedIn) {
             await establishSession(accounts[0]);
+            showUI(true);
         } else {
             showUI(false);
         }
@@ -324,7 +324,7 @@ function logout() {
     // 5. Опціонально: перезавантажуємо сторінку, щоб повністю очистити пам'ять
     window.location.href = "index.html"; 
     // або просто:
-    window.location.reload();
+    // window.location.reload();
 }
 function log(msg) { const c = document.getElementById('console'); if (c) c.innerHTML = `> ${msg}<br>` + c.innerHTML; }
 
