@@ -4,7 +4,9 @@ const OWNER_ADDR = "0xf08b28c6d8a26cd1a24d1dbc95c89005f1e04ead";
 
 // Адреса вашого бекенду на s-host (замініть на реальну)
 const API_URL = "https://projects.eccyb.org/app/api.php";
-
+// Додати в i18n
+// en: linkForgot: "Forgot password?", resetTitle: "Reset Password"
+// ua: linkForgot: "Забули пароль?", resetTitle: "Відновлення пароля"
 const i18n = {
     en: {
         home: "Home", stake: "Staking", wallet: "Transfer", admin: "Admin", logout: "Logout",
@@ -15,7 +17,7 @@ const i18n = {
         infoStake: "Invest your capital into projects. This module locks tokens for a specific period to earn business revenue. Early exit forfeits the profit.",
         titleTrans: "Asset Transfers",
         infoTrans: "Securely send ECCYB tokens to other business entities within the BTTC network.",
-        titleAdmin: "Treasury Control",
+        titleAdmin: "Treasury Control", linkForgot: "Forgot password?", resetTitle: "Reset Password",
         infoAdmin: "Management of the firm's central treasury: audit student balances, distribute initial grants, and gas support."
     },
     ua: {
@@ -28,7 +30,7 @@ const i18n = {
         infoStake: "Інвестуйте капітал у проекти. Цей модуль блокує токени на певний термін для отримання прибутку. Дострокове виведення скасовує бонус.",
         titleTrans: "Переказ активів",
         infoTrans: "Безпечно надсилайте токени ECCYB іншим підрозділам у мережі BTTC.",
-        titleAdmin: "Керування казною",
+        titleAdmin: "Керування казною", linkForgot: "Забули пароль?", resetTitle: "Відновлення пароля",
         infoAdmin: "Інструменти фінансового директора: аудит балансів студентів, видача початкових грантів та підтримка газом (BTT)."
     }
 };
@@ -250,6 +252,49 @@ async function sendGrant() {
         }
     } catch (e) {
         log("Network error: " + e.message);
+    }
+}
+
+
+function showForgot(show) {
+    document.getElementById('loginForm').style.display = show ? 'none' : 'block';
+    document.getElementById('forgotForm').style.display = show ? 'block' : 'none';
+}
+
+async function handleForgot() {
+    const email = document.getElementById('resetEmail').value;
+    const resp = await fetch(`${API_URL}?action=forgot_password`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ email })
+    });
+    const res = await resp.json();
+    if (res.status === "success") {
+        alert("Код відправлено (Debug: " + (res.debug_token || "перевірте пошту") + ")");
+        document.getElementById('step2Reset').style.display = 'block';
+        document.getElementById('btnForgot').style.display = 'none';
+        document.getElementById('btnReset').style.display = 'block';
+    } else {
+        alert(res.message);
+    }
+}
+
+async function handleReset() {
+    const email = document.getElementById('resetEmail').value;
+    const token = document.getElementById('resetToken').value;
+    const new_password = document.getElementById('newPass').value;
+
+    const resp = await fetch(`${API_URL}?action=reset_password`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ email, token, new_password })
+    });
+    const res = await resp.json();
+    if (res.status === "success") {
+        alert("Пароль оновлено!");
+        showForgot(false);
+    } else {
+        alert(res.message);
     }
 }
 
