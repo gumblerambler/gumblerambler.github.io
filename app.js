@@ -165,31 +165,32 @@ async function establishSession(addr) {
 async function syncWithBackend(address) {
     if (!address) return;
     try {
-        console.log("🚀 Sending request for:", address);
+        console.log("🚀 Запит капіталу для:", address);
         
         const response = await fetch(`${API_URL}?action=login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
-                action: 'login', // Додаємо дію прямо в тіло запиту
+                action: 'login', // Дублюємо тут
                 address: address.toLowerCase() 
             })
         });
 
         const result = await response.json();
-        console.log("✅ Full Backend Response:", result);
-        
+        console.log("✅ Результат:", result);
+
         if (result.status === "success" && result.data) {
             const capElement = document.getElementById('dbCapital');
             if (capElement) {
-                // Переконайтеся, що в базі стовпчик називається capital_allocated
+                // ВАЖЛИВО: перевірте чи в БД саме ця назва стовпця
                 const amount = result.data.capital_allocated || "0.00";
                 capElement.innerText = parseFloat(amount).toFixed(2) + " ECCYB";
-                console.log("💰 UI Updated!");
             }
+        } else if (result.error) {
+            console.error("❌ Сервер не зрозумів дію:", result);
         }
     } catch (e) {
-        console.error("❌ Sync Error:", e);
+        console.error("❌ Помилка fetch:", e);
     }
 }
 
