@@ -322,7 +322,7 @@ function logout() {
     log(i18n[currentLang].logOutMsg);
     
     // 5. Опціонально: перезавантажуємо сторінку, щоб повністю очистити пам'ять
-    // window.location.href = "index.html"; 
+    window.location.href = "index.html"; 
     // або просто:
     window.location.reload();
 }
