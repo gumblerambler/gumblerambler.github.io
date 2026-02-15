@@ -2,7 +2,6 @@ const TOKEN_ADDR = "0x4aa97493d7c8e570a548549222d21e91aa6c60ca";
 const STAKING_ADDR = "0x440C907485cb68B3A708EcC3d0E93d121bF6dAeb";
 const OWNER_ADDR = "0xf08b28c6d8a26cd1a24d1dbc95c89005f1e04ead";
 
-// Адреса вашого бекенду на s-host (замініть на реальну)
 const API_URL = "https://projects.eccyb.org/app/api.php";
 // Додати в i18n
 // en: linkForgot: "Forgot password?", resetTitle: "Reset Password"
@@ -47,11 +46,26 @@ async function init() {
         window.history.replaceState({}, document.title, window.location.pathname);
         return;
     }
-    if (!window.ethereum) return;
-    const provider = new ethers.BrowserProvider(window.ethereum);
-    const accounts = await provider.listAccounts();
-    if (accounts.length > 0) await establishSession(accounts[0].address);
-    else showUI(false);
+    //if (!window.ethereum) return;
+
+    if (window.ethereum) {
+        // Додаємо відстеження зміни акаунта (щоб викидало при зміні)
+        window.ethereum.on('accountsChanged', function (accounts) {
+            sessionStorage.removeItem('isLoggedIn'); // Скидаємо сесію
+            window.location.reload();
+        });
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const accounts = await provider.listAccounts();
+        //const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+        const loggedIn = sessionStorage.getItem('isLoggedIn');
+
+        if (accounts.length > 0 && loggedIn === 'true') {
+            await establishSession(accounts[0]);
+            showUI(true);
+        } else {
+            showUI(false); // Якщо гаманець змінено або не залогінився — показуємо форму входу
+        }
+    }  
 }
 
 async function handleRegister() {
@@ -124,12 +138,14 @@ async function emailLogin() {
         const result = await response.json();
         
         if (result.status === "success") {
+
+            sessionStorage.setItem('isLoggedIn', 'true'); // Позначаємо, що вхід виконано
             // 1. Зберігаємо адресу в глобальну змінну
             userAddress = result.data.wallet_address;
             
             // 2. Запускаємо сесію (підключення до контрактів)
             await establishSession(userAddress);
-            
+            showUI(true);
             // 3. ПРИМУСОВО ХОВАЄМО ВХІД І ПОКАЗУЄМО ДАНІ
             document.getElementById('authSection').style.display = 'none';
             document.getElementById('dataSection').style.display = 'block';
