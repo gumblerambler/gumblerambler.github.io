@@ -34,6 +34,21 @@
                 Already have an account? <a href="#" onclick="toggleAuth(false)">Login</a>
             </p>
         </div>
+                <p style="font-size:0.8em; margin-top:5px;">
+            <a href="#" onclick="showForgot(true)" data-i18n="linkForgot">Forgot password?</a>
+        </p>
+        
+        <div id="forgotForm" style="display:none;">
+            <h3 data-i18n="resetTitle">Reset Password</h3>
+            <input type="email" id="resetEmail" placeholder="Enter your Email" style="width:90%; margin-bottom:10px;">
+            <div id="step2Reset" style="display:none;">
+                <input type="text" id="resetToken" placeholder="Code from Email" style="width:90%; margin-bottom:10px;">
+                <input type="password" id="newPass" placeholder="New Password" style="width:90%; margin-bottom:10px;">
+            </div>
+            <button id="btnForgot" onclick="handleForgot()" style="width:95%;">Send Reset Code</button>
+            <button id="btnReset" onclick="handleReset()" style="width:95%; display:none; background:#2a9d8f;">Update Password</button>
+            <p><a href="#" onclick="showForgot(false)" data-i18n="linkLogin">Back to Login</a></p>
+        </div>
     </div>
 
     <nav id="mainNav" style="display:none;">
@@ -80,6 +95,7 @@
 <script src="app.js"></script>
 </body>
 </html>
+
 
 
 
