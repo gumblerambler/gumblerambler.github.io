@@ -13,8 +13,27 @@
     </div>
     <header><h1>ECCYB Project</h1></header>
 
-    <div id="authSection" style="text-align:center; padding:40px;">
-        <button onclick="connect()" data-i18n="connBtn">Connect MetaMask</button>
+    <div id="authSection" class="panel" style="max-width: 400px; margin: 40px auto; text-align: center;">
+        <h2 data-i18n="authTitle">Corporate Login</h2>
+        
+        <div id="loginForm">
+            <input type="email" id="logEmail" placeholder="Email" style="width:90%; margin-bottom:10px;">
+            <input type="password" id="logPass" placeholder="Password" style="width:90%; margin-bottom:10px;">
+            <button onclick="emailLogin()" style="width:95%;">Sign In</button>
+            <p style="font-size:0.8em; margin-top:10px;">
+                No account? <a href="#" onclick="toggleAuth(true)">Register here</a>
+            </p>
+        </div>
+    
+        <div id="regForm" style="display:none;">
+            <input type="email" id="regEmail" placeholder="Corporate Email" style="width:90%; margin-bottom:10px;">
+            <input type="password" id="regPass" placeholder="Create Password" style="width:90%; margin-bottom:10px;">
+            <p style="font-size:0.7em; color: #666; margin-bottom:10px;">*You must connect MetaMask to link your wallet</p>
+            <button id="regBtn" onclick="emailRegister()" style="width:95%; background:#2a9d8f;">Connect & Register</button>
+            <p style="font-size:0.8em; margin-top:10px;">
+                Already have an account? <a href="#" onclick="toggleAuth(false)">Login</a>
+            </p>
+        </div>
     </div>
 
     <nav id="mainNav" style="display:none;">
@@ -61,6 +80,7 @@
 <script src="app.js"></script>
 </body>
 </html>
+
 
 
 
