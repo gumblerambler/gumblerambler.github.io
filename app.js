@@ -52,6 +52,26 @@ async function init() {
     else showUI(false);
 }
 
+async function handleRegister() {
+    const email = document.getElementById('regEmail').value;
+    const pass = document.getElementById('regPass').value;
+    
+    // Спочатку просимо підключити гаманець, щоб прив'язати його
+    if (!userAddress) await connect();
+
+    const response = await fetch(`${API_URL}?action=register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            email: email,
+            password: pass,
+            address: userAddress
+        })
+    });
+    const result = await response.json();
+    log(result.message);
+}
+
 async function connect() {
     try {
         const provider = new ethers.BrowserProvider(window.ethereum);
