@@ -72,6 +72,55 @@ async function handleRegister() {
     log(result.message);
 }
 
+function toggleAuth(showReg) {
+    document.getElementById('loginForm').style.display = showReg ? 'none' : 'block';
+    document.getElementById('regForm').style.display = showReg ? 'block' : 'none';
+}
+
+async function emailRegister() {
+    const email = document.getElementById('regEmail').value;
+    const pass = document.getElementById('regPass').value;
+    if(!email || !pass) return alert("Fill fields");
+
+    // 1. Спочатку підключаємо гаманець
+    await connect(); 
+    if(!userAddress) return;
+
+    // 2. Відправляємо на бекенд
+    const resp = await fetch(`${API_URL}?action=register`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ email, password: pass, address: userAddress })
+    });
+    const res = await resp.json();
+    if(res.status === "success") {
+        alert("Registered! Now please Login.");
+        toggleAuth(false);
+    } else {
+        alert(res.message);
+    }
+}
+
+async function emailLogin() {
+    const email = document.getElementById('logEmail').value;
+    const pass = document.getElementById('logPass').value;
+
+    const resp = await fetch(`${API_URL}?action=login_email`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ email, password: pass })
+    });
+    const res = await resp.json();
+    
+    if(res.status === "success") {
+        // Після логіну поштою — автоматично підключаємо MetaMask
+        await establishSession(res.data.wallet_address);
+        log("Logged in as " + email);
+    } else {
+        alert("Invalid email or password");
+    }
+}
+
 async function connect() {
     try {
         const provider = new ethers.BrowserProvider(window.ethereum);
