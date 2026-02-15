@@ -50,7 +50,8 @@ async function init() {
         const loggedIn = sessionStorage.getItem('isLoggedIn') === 'true';
 
         if (accounts.length > 0 && loggedIn) {
-            await establishSession(accounts[0]);
+            const user = accounts[0].toLowerCase();
+            await establishSession(user);
             showUI(true);
         } else {
             showUI(false);
@@ -61,28 +62,49 @@ async function init() {
 async function emailLogin() {
     const email = document.getElementById('logEmail').value.trim();
     const pass = document.getElementById('logPass').value.trim();
+
     if (!email || !pass) return;
 
     try {
+        log("Checking credentials...");
+        
+        // Отримуємо поточну адресу з MetaMask
+        const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+        const currentMetaMaskAddr = accounts[0]?.toLowerCase();
+
+        if (!currentMetaMaskAddr) {
+            alert("Please connect MetaMask first");
+            return;
+        }
+
         const response = await fetch(API_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                action: 'login_email', // Передаємо екшн тут
-                email: email, 
-                password: pass 
-            })
+            body: JSON.stringify({ action: 'login_email', email, password: pass })
         });
 
         const result = await response.json();
+
         if (result.status === "success") {
+            const dbWalletAddr = result.data.wallet_address.toLowerCase();
+
+            // ПЕРЕВІРКА: чи збігається активний гаманець з гаманцем у БД
+            if (currentMetaMaskAddr !== dbWalletAddr) {
+                alert(`This account is linked to another wallet: ${dbWalletAddr.slice(0, 6)}...${dbWalletAddr.slice(-4)}. Please switch your MetaMask account.`);
+                return; // Блокуємо вхід
+            }
+
+            // Якщо все добре — пускаємо
             sessionStorage.setItem('isLoggedIn', 'true');
             await establishSession(result.data.wallet_address);
             showUI(true);
+            log("Welcome, " + email);
         } else {
             alert(result.message);
         }
-    } catch (e) { console.error(e); }
+    } catch (e) {
+        console.error("Login error:", e);
+    }
 }
 
 async function syncWithBackend(address) {
