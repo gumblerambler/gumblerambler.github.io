@@ -165,18 +165,16 @@ async function establishSession(addr) {
 async function syncWithBackend(address) {
     if (!address) return;
     try {
-        console.log("🚀 Sending request to PHP for address:", address);
+        console.log("🚀 Sending request for:", address);
         
-        // Використовуємо action=login, бо він повертає дані профілю
         const response = await fetch(`${API_URL}?action=login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ address: address.toLowerCase() })
+            body: JSON.stringify({ 
+                action: 'login', // Додаємо дію прямо в тіло запиту
+                address: address.toLowerCase() 
+            })
         });
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
 
         const result = await response.json();
         console.log("✅ Full Backend Response:", result);
@@ -184,18 +182,14 @@ async function syncWithBackend(address) {
         if (result.status === "success" && result.data) {
             const capElement = document.getElementById('dbCapital');
             if (capElement) {
-                // ВАЖЛИВО: перевіряємо точну назву ключа з бази
+                // Переконайтеся, що в базі стовпчик називається capital_allocated
                 const amount = result.data.capital_allocated || "0.00";
                 capElement.innerText = parseFloat(amount).toFixed(2) + " ECCYB";
-                console.log("💰 UI Updated with Capital:", amount);
-            } else {
-                console.error("❌ Element #dbCapital not found on this page!");
+                console.log("💰 UI Updated!");
             }
-        } else {
-            console.warn("⚠️ Backend returned success:false or empty data", result);
         }
     } catch (e) {
-        console.error("❌ Critical Backend Sync Error:", e);
+        console.error("❌ Sync Error:", e);
     }
 }
 
