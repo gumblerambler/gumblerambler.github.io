@@ -104,22 +104,45 @@ async function emailRegister() {
 }
 
 async function emailLogin() {
-    const email = document.getElementById('logEmail').value;
-    const pass = document.getElementById('logPass').value;
+    const email = document.getElementById('logEmail').value.trim();
+    const pass = document.getElementById('logPass').value.trim();
 
-    const resp = await fetch(`${API_URL}?action=login_email`, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ email, password: pass })
-    });
-    const res = await resp.json();
-    
-    if(res.status === "success") {
-        // Після логіну поштою — автоматично підключаємо MetaMask
-        await establishSession(res.data.wallet_address);
-        log("Logged in as " + email);
-    } else {
-        alert("Invalid email or password");
+    if (!email || !pass) return;
+
+    try {
+        log("Authenticating...");
+        const params = new URLSearchParams();
+        params.append('action', 'login_email');
+        params.append('email', email);
+        params.append('password', pass);
+
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            body: params
+        });
+
+        const result = await response.json();
+        
+        if (result.status === "success") {
+            // 1. Зберігаємо адресу в глобальну змінну
+            userAddress = result.data.wallet_address;
+            
+            // 2. Запускаємо сесію (підключення до контрактів)
+            await establishSession(userAddress);
+            
+            // 3. ПРИМУСОВО ХОВАЄМО ВХІД І ПОКАЗУЄМО ДАНІ
+            document.getElementById('authSection').style.display = 'none';
+            document.getElementById('dataSection').style.display = 'block';
+            
+            // 4. Оновлюємо капітал відразу
+            await syncWithBackend(userAddress);
+            
+            log("Logged in as: " + email);
+        } else {
+            alert(result.message);
+        }
+    } catch (e) {
+        console.error("Login error:", e);
     }
 }
 
