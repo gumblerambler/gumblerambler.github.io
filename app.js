@@ -165,32 +165,33 @@ async function establishSession(addr) {
 async function syncWithBackend(address) {
     if (!address) return;
     try {
-        console.log("🚀 Запит капіталу для:", address);
-        
-        const response = await fetch(`${API_URL}?action=login`, {
+        console.log("🚀 Запит капіталу (login_email) для:", address);
+
+        const params = new URLSearchParams();
+        params.append('action', 'login_email'); // ВИПРАВЛЕНО НА ПРАВИЛЬНУ ДІЮ
+        params.append('address', address.toLowerCase());
+
+        const response = await fetch(API_URL, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                action: 'login', // Дублюємо тут
-                address: address.toLowerCase() 
-            })
+            body: params
         });
 
         const result = await response.json();
-        console.log("✅ Результат:", result);
+        console.log("✅ Результат сервера:", result);
 
         if (result.status === "success" && result.data) {
             const capElement = document.getElementById('dbCapital');
             if (capElement) {
-                // ВАЖЛИВО: перевірте чи в БД саме ця назва стовпця
+                // Виводимо capital_allocated з бази
                 const amount = result.data.capital_allocated || "0.00";
                 capElement.innerText = parseFloat(amount).toFixed(2) + " ECCYB";
+                console.log("💰 Капітал відображено!");
             }
-        } else if (result.error) {
-            console.error("❌ Сервер не зрозумів дію:", result);
+        } else {
+            console.warn("⚠️ Дані не знайдено або помилка:", result.message);
         }
     } catch (e) {
-        console.error("❌ Помилка fetch:", e);
+        console.error("❌ Помилка зв'язку:", e);
     }
 }
 
