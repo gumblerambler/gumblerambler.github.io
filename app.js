@@ -1,6 +1,7 @@
 const TOKEN_ADDR = "0x4aa97493d7c8e570a548549222d21e91aa6c60ca";
 const STAKING_ADDR = "0x440C907485cb68B3A708EcC3d0E93d121bF6dAeb";
 const OWNER_ADDR = "0xf08b28c6d8a26cd1a24d1dbc95c89005f1e04ead";
+
 const API_URL = "https://projects.eccyb.org/app/api.php";
 
 const i18n = {
@@ -64,6 +65,7 @@ async function establishSession(addr) {
     await syncData();
 }
 
+// Виправлено: перехід на URLSearchParams, щоб PHP бачив параметри
 async function syncWithBackend(address) {
     if (!address) return;
     try {
@@ -71,45 +73,57 @@ async function syncWithBackend(address) {
         params.append('action', 'login');
         params.append('address', address.toLowerCase());
 
-        const response = await fetch(API_URL, { method: 'POST', body: params });
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            body: params
+        });
         const result = await response.json();
         if (result.status === "success" && result.data) {
-            const cap = document.getElementById('dbCapital');
-            if (cap) cap.innerText = parseFloat(result.data.capital_allocated || 0).toFixed(2) + " ECCYB";
+            const capElement = document.getElementById('dbCapital');
+            if (capElement) {
+                const amount = result.data.capital_allocated || "0.00";
+                capElement.innerText = parseFloat(amount).toFixed(2) + " ECCYB";
+            }
         }
-    } catch (e) { console.error(e); }
+    } catch (e) { console.error("Sync error:", e); }
 }
 
+// Виправлено: миттєвий вхід та сумісність форматів
 async function emailLogin() {
     const email = document.getElementById('logEmail').value.trim();
     const password = document.getElementById('logPass').value.trim();
+
     if (!email || !password) return;
 
     try {
-        // ВИПРАВЛЕНО: Використовуємо URLSearchParams замість JSON
         const params = new URLSearchParams();
         params.append('action', 'login_email');
         params.append('email', email);
         params.append('password', password);
 
-        const response = await fetch(API_URL, { method: 'POST', body: params });
-        const result = await response.json();
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            body: params
+        });
 
+        const result = await response.json();
         if (result.status === "success") {
+            // Встановлюємо сесію та ВІДРАЗУ перемикаємо інтерфейс
             await establishSession(result.data.wallet_address);
-            showUI(true); // МИТТЄВИЙ ПЕРЕХІД
+            showUI(true); 
+            log("Welcome!");
         } else {
             alert(result.message);
         }
-    } catch (e) { console.error(e); }
+    } catch (e) { console.error("Login error:", e); }
 }
 
 async function emailRegister() {
     const email = document.getElementById('regEmail').value.trim();
     const password = document.getElementById('regPass').value.trim();
-    if (!email || !password) return alert("Fill fields");
+    if (!email || !password) return alert("Fill all fields");
 
-    if (!window.ethereum) return alert("Install MetaMask");
+    if (!window.ethereum) return alert("MetaMask not found");
     const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
     const address = accounts[0];
 
@@ -120,16 +134,21 @@ async function emailRegister() {
         params.append('password', password);
         params.append('address', address);
 
-        const response = await fetch(API_URL, { method: 'POST', body: params });
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            body: params
+        });
         const result = await response.json();
         if (result.status === "success") {
-            alert("Success! Now Login.");
+            alert("Registration successful! Please login.");
             toggleAuth(false);
-        } else { alert(result.message); }
-    } catch (e) { console.error(e); }
+        } else {
+            alert(result.message);
+        }
+    } catch (e) { console.error("Reg error:", e); }
 }
 
-// Решта функцій (blockchain, i18n, reset) залишаються без змін
+// Решта твоїх функцій з оригінального файлу без змін
 async function handleTx(txPromise) {
     try {
         log(i18n[currentLang].wait);
@@ -164,7 +183,9 @@ async function syncData() {
         const gas = await provider.getBalance(userAddress);
         document.getElementById('gasBalance').innerText = ethers.formatEther(gas).slice(0, 6) + " BTT";
         const stake = await stakingContract.getStakeInfo(userAddress);
-        if (document.getElementById('stakedAmt')) document.getElementById('stakedAmt').innerText = ethers.formatUnits(stake[0], 18);
+        if (document.getElementById('stakedAmt')) {
+            document.getElementById('stakedAmt').innerText = ethers.formatUnits(stake[0], 18);
+        }
     } catch (e) { console.error(e); }
 }
 
@@ -175,13 +196,60 @@ function updateLang() {
     });
 }
 
-function setLang(lang) { currentLang = lang; localStorage.setItem('lang', lang); updateLang(); }
+function setLang(lang) {
+    currentLang = lang;
+    localStorage.setItem('lang', lang);
+    updateLang();
+}
+
 function toggleAuth(showReg) {
     document.getElementById('loginForm').style.display = showReg ? 'none' : 'block';
     document.getElementById('regForm').style.display = showReg ? 'block' : 'none';
 }
+
+function showForgot(show) {
+    document.getElementById('loginForm').style.display = show ? 'none' : 'block';
+    document.getElementById('forgotForm').style.display = show ? 'block' : 'none';
+}
+
+async function handleForgot() {
+    const email = document.getElementById('resetEmail').value;
+    const params = new URLSearchParams();
+    params.append('action', 'forgot_password');
+    params.append('email', email);
+
+    const resp = await fetch(API_URL, { method: 'POST', body: params });
+    const res = await resp.json();
+    if (res.status === "success") {
+        alert("Код відправлено!");
+        document.getElementById('step2Reset').style.display = 'block';
+        document.getElementById('btnForgot').style.display = 'none';
+        document.getElementById('btnReset').style.display = 'block';
+    } else { alert(res.message); }
+}
+
+async function handleReset() {
+    const email = document.getElementById('resetEmail').value;
+    const token = document.getElementById('resetToken').value;
+    const new_password = document.getElementById('newPass').value;
+
+    const params = new URLSearchParams();
+    params.append('action', 'reset_password');
+    params.append('email', email);
+    params.append('token', token);
+    params.append('new_password', new_password);
+
+    const resp = await fetch(API_URL, { method: 'POST', body: params });
+    const res = await resp.json();
+    if (res.status === "success") {
+        alert("Пароль оновлено!");
+        showForgot(false);
+    } else { alert(res.message); }
+}
+
 function log(msg) {
     const c = document.getElementById('console');
     if (c) c.innerHTML = `> ${msg}<br>` + c.innerHTML;
 }
+
 window.onload = init;
