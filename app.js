@@ -37,36 +37,72 @@ const i18n = {
 let currentLang = localStorage.getItem('eccyb_lang') || 'en';
 let signer, tokenContract, stakingContract, userAddress;
 
+
 async function init() {
     updateUI();
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('action') === 'logout') {
-        showUI(false);
-        log(i18n[currentLang].logOutMsg);
-        window.history.replaceState({}, document.title, window.location.pathname);
-        return;
-    }
-    //if (!window.ethereum) return;
-
     if (window.ethereum) {
-        // Додаємо відстеження зміни акаунта (щоб викидало при зміні)
-        window.ethereum.on('accountsChanged', function (accounts) {
-            sessionStorage.removeItem('isLoggedIn'); // Скидаємо сесію
+        // ВИПРАВЛЕННЯ: Скидання сесії при зміні гаманця
+        window.ethereum.on('accountsChanged', function () {
+            sessionStorage.removeItem('isLoggedIn');
             window.location.reload();
         });
-        const provider = new ethers.BrowserProvider(window.ethereum);
-        const accounts = await provider.listAccounts();
-        //const accounts = await window.ethereum.request({ method: 'eth_accounts' });
-        const loggedIn = sessionStorage.getItem('isLoggedIn');
 
-        if (accounts.length > 0 && loggedIn === 'true') {
+        const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+        const loggedIn = sessionStorage.getItem('isLoggedIn') === 'true';
+
+        if (accounts.length > 0 && loggedIn) {
             await establishSession(accounts[0]);
-            showUI(true);
         } else {
-            showUI(false); // Якщо гаманець змінено або не залогінився — показуємо форму входу
+            showUI(false);
         }
-    }  
+    }
 }
+
+async function emailLogin() {
+    const email = document.getElementById('logEmail').value.trim();
+    const pass = document.getElementById('logPass').value.trim();
+    if (!email || !pass) return;
+
+    try {
+        log("Authenticating...");
+        // ВИПРАВЛЕННО: Відправляємо JSON замість URLSearchParams
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'login_email', email: email, password: pass })
+        });
+
+        const result = await response.json();
+        if (result.status === "success") {
+            sessionStorage.setItem('isLoggedIn', 'true'); // Встановлюємо сесію
+            userAddress = result.data.wallet_address;
+            await establishSession(userAddress);
+        } else {
+            alert(result.message);
+        }
+    } catch (e) { console.error("Login error:", e); }
+}
+
+async function syncWithBackend(address) {
+    if (!address) return;
+    try {
+        // ВИПРАВЛЕННО: Використовуємо JSON та екшен get_profile
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'get_profile', address: address.toLowerCase() })
+        });
+
+        const result = await response.json();
+        if (result.status === "success" && result.data) {
+            const capElement = document.getElementById('dbCapital');
+            if (capElement) {
+                capElement.innerText = parseFloat(result.data.capital_allocated || 0).toFixed(2) + " ECCYB";
+            }
+        }
+    } catch (e) { console.error("Sync error:", e); }
+}
+
 
 async function handleRegister() {
     const email = document.getElementById('regEmail').value;
@@ -117,50 +153,7 @@ async function emailRegister() {
     }
 }
 
-async function emailLogin() {
-    const email = document.getElementById('logEmail').value.trim();
-    const pass = document.getElementById('logPass').value.trim();
 
-    if (!email || !pass) return;
-
-    try {
-        log("Authenticating...");
-        const params = new URLSearchParams();
-        params.append('action', 'login_email');
-        params.append('email', email);
-        params.append('password', pass);
-
-        const response = await fetch(API_URL, {
-            method: 'POST',
-            body: params
-        });
-
-        const result = await response.json();
-        
-        if (result.status === "success") {
-
-            sessionStorage.setItem('isLoggedIn', 'true'); // Позначаємо, що вхід виконано
-            // 1. Зберігаємо адресу в глобальну змінну
-            userAddress = result.data.wallet_address;
-            
-            // 2. Запускаємо сесію (підключення до контрактів)
-            await establishSession(userAddress);
-            showUI(true);
-            // 3. ПРИМУСОВО ХОВАЄМО ВХІД І ПОКАЗУЄМО ДАНІ
-            document.getElementById('authSection').style.display = 'none';
-            document.getElementById('dataSection').style.display = 'block';
-            
-            // 4. Оновлюємо капітал відразу
-            await syncWithBackend(userAddress);
-            
-            log("Logged in as: " + email);
-        } else {
-            alert(result.message);
-        }
-    } catch (e) {
-        console.error("Login error:", e);
-    }
-}
 
 async function connect() {
     try {
@@ -201,38 +194,7 @@ async function establishSession(addr) {
     });
 }
 
-async function syncWithBackend(address) {
-    if (!address) return;
-    try {
-        console.log("🚀 Запит капіталу (login_email) для:", address);
 
-        const params = new URLSearchParams();
-        params.append('action', 'login_email'); // ВИПРАВЛЕНО НА ПРАВИЛЬНУ ДІЮ
-        params.append('address', address.toLowerCase());
-
-        const response = await fetch(API_URL, {
-            method: 'POST',
-            body: params
-        });
-
-        const result = await response.json();
-        console.log("✅ Результат сервера:", result);
-
-        if (result.status === "success" && result.data) {
-            const capElement = document.getElementById('dbCapital');
-            if (capElement) {
-                // Виводимо capital_allocated з бази
-                const amount = result.data.capital_allocated || "0.00";
-                capElement.innerText = parseFloat(amount).toFixed(2) + " ECCYB";
-                console.log("💰 Капітал відображено!");
-            }
-        } else {
-            console.warn("⚠️ Дані не знайдено або помилка:", result.message);
-        }
-    } catch (e) {
-        console.error("❌ Помилка зв'язку:", e);
-    }
-}
 
 function showUI(connected) {
     document.getElementById('authSection').style.display = connected ? 'none' : 'block';
