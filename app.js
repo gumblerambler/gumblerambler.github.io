@@ -308,7 +308,24 @@ async function handleReset() {
     }
 }
 
-function logout() { window.location.href = "index.html?action=logout"; }
+function logout() {
+    // 1. Очищуємо мітку входу, яку ми додавали для безпеки
+    sessionStorage.removeItem('isLoggedIn');
+    
+    // 2. Скидаємо глобальну адресу
+    userAddress = null;
+    
+    // 3. Перемикаємо інтерфейс назад на форму логіну
+    showUI(false);
+    
+    // 4. Очищуємо консоль або статус
+    log(i18n[currentLang].logOutMsg);
+    
+    // 5. Опціонально: перезавантажуємо сторінку, щоб повністю очистити пам'ять
+    // window.location.href = "index.html"; 
+    // або просто:
+    window.location.reload();
+}
 function log(msg) { const c = document.getElementById('console'); if (c) c.innerHTML = `> ${msg}<br>` + c.innerHTML; }
 
 async function handleTx(txPromise) {
