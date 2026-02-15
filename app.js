@@ -129,6 +129,8 @@ async function emailLogin() {
             
             // 2. Запускаємо сесію (підключення до контрактів)
             await establishSession(userAddress);
+
+            showUI(true);
             
             // 3. ПРИМУСОВО ХОВАЄМО ВХІД І ПОКАЗУЄМО ДАНІ
             document.getElementById('authSection').style.display = 'none';
