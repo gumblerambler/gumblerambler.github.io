@@ -154,34 +154,61 @@ function toggleAuth(showReg) {
 }
 
 async function emailRegister() {
-    const email = document.getElementById('regEmail').value;
-    const pass = document.getElementById('regPass').value;
-    const fullName = document.getElementById('regFullName').value;
-    const groupName = document.getElementById('regGroup').value;
-    if(!fullName || !groupName || !email || !pass) return alert("Fill fields");
+    // 1. Збираємо дані з форми
+    const email = document.getElementById('regEmail').value.trim();
+    const pass = document.getElementById('regPass').value.trim();
+    const fullName = document.getElementById('regFullName').value.trim();
+    const groupName = document.getElementById('regGroup').value.trim();
 
-    // 1. Спочатку підключаємо гаманець
-    const provider = new ethers.BrowserProvider(window.ethereum);
-    const accounts = await provider.send("eth_requestAccounts", []);
-    const userAddress = accounts[0]; // Отримуємо адресу напряму
-    if(!userAddress) return;
+    // Перевірка на заповнення полів (фронтенд)
+    if(!fullName || !groupName || !email || !pass) {
+        alert("Будь ласка, заповніть всі поля форми.");
+        return;
+    }
 
-    // 2. Відправляємо на бекенд
-    const resp = await fetch(`${API_URL}?action=register`, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ email, password: pass, address: userAddress, full_name: fullName, group_name: groupName })
-    });
-    const res = await resp.json();
-    if(res.status === "success") {
-        alert("Registered! Now please Login.");
-        toggleAuth(false);
-    } else {
-        alert(res.message);
+    try {
+        // 2. Викликаємо MetaMask ТУТ
+        if (!window.ethereum) {
+            alert("MetaMask не знайдено! Встановіть розширення.");
+            return;
+        }
+        
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const accounts = await provider.send("eth_requestAccounts", []);
+        const walletAddr = accounts[0]; // Отримуємо адресу гаманця
+
+        log("Реєстрація користувача...");
+
+        // 3. Відправляємо дані на сервер
+        const resp = await fetch(API_URL, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ 
+                action: 'register', 
+                email: email, 
+                password: pass, 
+                address: walletAddr, 
+                full_name: fullName, 
+                group_name: groupName 
+            })
+        });
+
+        const res = await resp.json();
+
+        // 4. Обробляємо результат
+        if (res.status === "success") {
+            alert("Реєстрація успішна! Тепер увійдіть під своїм логіном.");
+            toggleAuth(false); // Повертаємо користувача на форму логіну
+        } else {
+            alert("Помилка БД: Сервер відхилив реєстрацію (можливо, такий email вже існує).");
+        }
+
+    } catch (e) {
+        console.error(e);
+        log("Помилка: " + e.message);
+        alert("Дію скасовано або виникла помилка підключення до MetaMask.");
     }
 }
-
-
 
 async function connect() {
     try {
