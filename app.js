@@ -156,7 +156,9 @@ function toggleAuth(showReg) {
 async function emailRegister() {
     const email = document.getElementById('regEmail').value;
     const pass = document.getElementById('regPass').value;
-    if(!email || !pass) return alert("Fill fields");
+    const fullName = document.getElementById('regFullName').value.trim();
+    const groupName = document.getElementById('regGroup').value.trim();
+    if(!fullName || !groupName || !email || !pass) return alert("Fill fields");
 
     // 1. Спочатку підключаємо гаманець
     await connect(); 
@@ -166,7 +168,7 @@ async function emailRegister() {
     const resp = await fetch(`${API_URL}?action=register`, {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ email, password: pass, address: userAddress })
+        body: JSON.stringify({ email, password: pass, address: userAddress, full_name: fullName, group_name: groupName })
     });
     const res = await resp.json();
     if(res.status === "success") {
