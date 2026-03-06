@@ -156,8 +156,8 @@ function toggleAuth(showReg) {
 async function emailRegister() {
     const email = document.getElementById('regEmail').value;
     const pass = document.getElementById('regPass').value;
-    const fullName = document.getElementById('regFullName').value.trim();
-    const groupName = document.getElementById('regGroup').value.trim();
+    const fullName = document.getElementById('regFullName').value;
+    const groupName = document.getElementById('regGroup').value;
     if(!fullName || !groupName || !email || !pass) return alert("Fill fields");
 
     // 1. Спочатку підключаємо гаманець
