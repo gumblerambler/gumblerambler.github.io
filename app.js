@@ -161,7 +161,9 @@ async function emailRegister() {
     if(!fullName || !groupName || !email || !pass) return alert("Fill fields");
 
     // 1. Спочатку підключаємо гаманець
-    await connect(); 
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const accounts = await provider.send("eth_requestAccounts", []);
+    const userAddress = accounts[0]; // Отримуємо адресу напряму
     if(!userAddress) return;
 
     // 2. Відправляємо на бекенд
