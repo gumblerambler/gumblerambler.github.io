@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ua">
+<head>
+    <meta charset="UTF-8">
+    <title>ECCYB | Gomoku Game</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/ethers@6.7.0/dist/ethers.umd.min.js"></script>
+    <style>
+        #gameBoard { 
+            display: grid; 
+            grid-template-columns: repeat(15, 25px); 
+            grid-template-rows: repeat(15, 25px); 
+            gap: 1px; 
+            background: var(--u-border); 
+            border: 2px solid var(--u-blue); 
+            margin: 20px auto; 
+            width: max-content; 
+        }
+        .cell { 
+            width: 25px; height: 25px; background: #fff; 
+            display: flex; align-items: center; justify-content: center; cursor: pointer; 
+        }
+        .cell.black::after { content: ""; width: 18px; height: 18px; background: #000; border-radius: 50%; }
+        .cell.white::after { content: ""; width: 18px; height: 18px; background: #fff; border: 1px solid #000; border-radius: 50%; }
+        #gameStatus { text-align: center; font-weight: bold; margin: 10px 0; min-height: 1.2em; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="lang-switch">
+        <button class="lang-btn" onclick="setLang('en')">EN</button>
+        <button class="lang-btn" onclick="setLang('ua')\">UA</button>
+    </div>
+
+    <header><h1>Gomoku Game</h1></header>
+
+    <div id="authSection" style="text-align: center; padding: 40px;">
+        <button onclick="connect()" data-i18n="connBtn">Connect</button>
+    </div>
+
+    <nav id="mainNav" style="display:none;">
+        <a href="index.html" data-i18n="home">Home</a>
+        <a href="staking.html" data-i18n="stake">Staking</a>
+        <a href="transfer.html" data-i18n="wallet">Transfer</a>
+        <a href="game.html" style="font-weight:bold; color:var(--u-blue);">Gomoku</a>
+        <a href="#" onclick="logout(); return false;" data-i18n="logout" style="color:#666;">Logout</a>
+    </nav>
+
+    <div id="dataSection" style="display:none;">
+        <div class="status-bar">
+            <div class="status-item"><strong data-i18n="bal">Token</strong>: <span id="eccybStat">--</span></div>
+            <div class="status-item"><strong data-i18n="capital">Capital</strong>: <span id="dbCapital">0.00</span></div>
+            <div class="status-item"><strong>Network</strong>: <span style="color: #2a9d8f;">BTTC</span></div>
+        </div>
+
+        <div class="panel">
+            <div id="gameStatus" data-i18n="gameWelcome">Press Start (1 ECCYB)</div>
+            <button id="startBtn" onclick="initiateGame()" data-i18n="btnStartGame">Start Game</button>
+            <div id="gameBoard" style="display: none;"></div>
+        </div>
+    </div>
+
+    <div id="console"></div>
+</div>
+
+<script src="app.js"></script>
+<script>
+    // Додаємо нові рядки в i18n (можна також додати прямо в app.js)
+    i18n.en.gameWelcome = "Stake 1 ECCYB to play and win 2!";
+    i18n.ua.gameWelcome = "Ставка 1 ECCYB. Перемога дає 2!";
+    i18n.en.btnStartGame = "Start Game";
+    i18n.ua.btnStartGame = "Почати гру";
+    i18n.en.yourTurn = "Your turn (Black)";
+    i18n.ua.yourTurn = "Ваш хід (Чорні)";
+    i18n.en.winMsg = "Victory! +2 ECCYB added to Capital.";
+    i18n.ua.winMsg = "Перемога! +2 ECCYB додано до Капіталу.";
+    i18n.en.loseMsg = "Bot won. Try again!";
+    i18n.ua.loseMsg = "Бот переміг. Спробуйте ще раз!";
+
+    let gameActive = false;
+
+    async function initiateGame() {
+        try {
+            log(i18n[currentLang].wait);
+            const amt = ethers.parseUnits("1", 18);
+            
+            // Оплата (Переказ токенів власнику)
+            const tx = await tokenContract.transfer(OWNER_ADDR, amt);
+            await tx.wait();
+
+            // Повідомляємо бекенд про нову гру
+            const resp = await fetch(API_URL, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ action: 'game_start', address: userAddress })
+            });
+            const res = await resp.json();
+
+            if (res.status === "success") {
+                gameActive = true;
+                document.getElementById('startBtn').style.display = 'none';
+                document.getElementById('gameBoard').style.display = 'grid';
+                document.getElementById('gameStatus').innerText = i18n[currentLang].yourTurn;
+                renderBoard(Array(15).fill().map(() => Array(15).fill(null)));
+                log(i18n[currentLang].ok);
+            }
+        } catch (e) {
+            log("Error: " + e.message);
+        }
+    }
+
+    async function makeMove(r, c) {
+        if (!gameActive) return;
+        try {
+            const resp = await fetch(API_URL, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ action: 'game_move', address: userAddress, row: r, col: c })
+            });
+            const res = await resp.json();
+            
+            if (res.status === "error") { alert(res.message); return; }
+
+            renderBoard(res.board);
+
+            if (res.status === "victory") {
+                finish(i18n[currentLang].winMsg);
+                await syncData(); // Оновлення балансу в UI
+            } else if (res.status === "defeat") {
+                finish(i18n[currentLang].loseMsg);
+            }
+        } catch (e) { log("System error"); }
+    }
+
+    function renderBoard(board) {
+        const grid = document.getElementById('gameBoard');
+        grid.innerHTML = '';
+        for (let r = 0; r < 15; r++) {
+            for (let c = 0; c < 15; c++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                if (board[r][c] === 'B') cell.classList.add('black');
+                if (board[r][c] === 'W') cell.classList.add('white');
+                cell.onclick = () => makeMove(r, c);
+                grid.appendChild(cell);
+            }
+        }
+    }
+
+    function finish(msg) {
+        gameActive = false;
+        document.getElementById('gameStatus').innerText = msg;
+        document.getElementById('startBtn').style.display = 'block';
+    }
+
+    // Ініціалізація мови при завантаженні
+    window.addEventListener('load', () => {
+        setTimeout(() => { updateUI(); }, 200);
+    });
+</script>
+</body>
+</html>
