@@ -155,7 +155,12 @@
 
             if (res.status === "victory") {
                 handleFinish(i18n[currentLang].win_msg);
-                await syncData(); // Оновлюємо Capital в UI (вже є в app.js)
+                if (typeof syncData === "function") {
+                        await syncData(); 
+                    } else {
+                        // Якщо syncData недоступна, викликаємо базовий fetch
+                        updateDBCapital(); 
+                    }               
             } else if (res.status === "defeat") {
                 handleFinish(i18n[currentLang].lose_msg);
             } else {
