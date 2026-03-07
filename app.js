@@ -336,17 +336,28 @@ async function fetchUserData() {
     }
 }
 
-async function updateDBCapital() {
+async function updateDBCapitalDirectly() {
+    if (!userAddress) return;
     try {
-        const resp = await fetch(`${API_URL}?action=get_user_data&address=${userAddress}`);
-        const data = await resp.json();
-        if (data && data.capital !== undefined) {
-            // Оновлюємо текст на сторінці
-            const capElem = document.getElementById('dbCapital');
-            if (capElem) capElem.innerText = parseFloat(data.capital).toFixed(2);
+        // Робимо запит до API, який ми щойно перевірили
+        const r = await fetch(`${API_URL}?action=get_user_data&address=${userAddress.toLowerCase()}`);
+        const d = await r.json();
+        
+        // Знаходимо елемент, де відображається Капітал
+        const el = document.getElementById('dbCapital');
+        
+        if (el && d.status === "success") {
+            // Перетворюємо рядок "5024.0000..." на гарне число "5024.00"
+            const cleanCapital = parseFloat(d.capital).toFixed(2);
+            el.innerText = cleanCapital;
+            
+            // Також оновлюємо глобальну змінну, якщо вона використовується в app.js
+            window.userCapital = cleanCapital; 
+            
+            console.log("UI Updated: Capital is now " + cleanCapital);
         }
-    } catch (e) {
-        console.error("Не вдалося оновити капітал:", e);
+    } catch (err) {
+        console.error("Помилка візуального оновлення:", err);
     }
 }
 
