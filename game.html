@@ -20,22 +20,25 @@
             width: 25px; height: 25px; background: #fff; 
             display: flex; align-items: center; justify-content: center; cursor: pointer; 
         }
+        /* Стилі для фішок (Чорні - гравець, Білі - бот) */
         .cell.black::after { content: ""; width: 18px; height: 18px; background: #000; border-radius: 50%; }
         .cell.white::after { content: ""; width: 18px; height: 18px; background: #fff; border: 1px solid #000; border-radius: 50%; }
-        #gameStatus { text-align: center; font-weight: bold; margin: 10px 0; min-height: 1.2em; }
+        
+        #gameStatus { text-align: center; font-weight: bold; margin: 10px 0; min-height: 1.2em; color: var(--u-blue); }
+        .game-panel { text-align: center; }
     </style>
 </head>
 <body>
 <div class="container">
     <div class="lang-switch">
         <button class="lang-btn" onclick="setLang('en')">EN</button>
-        <button class="lang-btn" onclick="setLang('ua')\">UA</button>
+        <button class="lang-btn" onclick="setLang('ua')">UA</button>
     </div>
 
     <header><h1>Gomoku Game</h1></header>
 
     <div id="authSection" style="text-align: center; padding: 40px;">
-        <button onclick="connect()" data-i18n="connBtn">Connect</button>
+        <button onclick="connect()" data-i18n="connBtn">Connect MetaMask</button>
     </div>
 
     <nav id="mainNav" style="display:none;">
@@ -53,9 +56,9 @@
             <div class="status-item"><strong>Network</strong>: <span style="color: #2a9d8f;">BTTC</span></div>
         </div>
 
-        <div class="panel">
-            <div id="gameStatus" data-i18n="gameWelcome">Press Start (1 ECCYB)</div>
-            <button id="startBtn" onclick="initiateGame()" data-i18n="btnStartGame">Start Game</button>
+        <div class="panel game-panel">
+            <div id="gameStatus" data-i18n="game_welcome">Stake 1 ECCYB to start!</div>
+            <button id="startBtn" onclick="payAndStart()" data-i18n="btn_start">Start New Game</button>
             <div id="gameBoard" style="display: none;"></div>
         </div>
     </div>
@@ -65,34 +68,48 @@
 
 <script src="app.js"></script>
 <script>
-    // Додаємо нові рядки в i18n (можна також додати прямо в app.js)
-    i18n.en.gameWelcome = "Stake 1 ECCYB to play and win 2!";
-    i18n.ua.gameWelcome = "Ставка 1 ECCYB. Перемога дає 2!";
-    i18n.en.btnStartGame = "Start Game";
-    i18n.ua.btnStartGame = "Почати гру";
-    i18n.en.yourTurn = "Your turn (Black)";
-    i18n.ua.yourTurn = "Ваш хід (Чорні)";
-    i18n.en.winMsg = "Victory! +2 ECCYB added to Capital.";
-    i18n.ua.winMsg = "Перемога! +2 ECCYB додано до Капіталу.";
-    i18n.en.loseMsg = "Bot won. Try again!";
-    i18n.ua.loseMsg = "Бот переміг. Спробуйте ще раз!";
+    // Додаємо переклади для гри в об'єкт i18n
+    Object.assign(i18n.en, {
+        game_welcome: "Stake 1 ECCYB to play and win 2!",
+        btn_start: "Start Game (1 ECCYB)",
+        your_turn: "Your turn",
+        bot_thinking: "Bot is thinking...",
+        win_msg: "Victory! +2.00 Capital added!",
+        lose_msg: "Bot won. Try again!",
+        game_err: "Error communicating with server"
+    });
+    Object.assign(i18n.ua, {
+        game_welcome: "Ставка 1 ECCYB. Перемога принесе 2!",
+        btn_start: "Почати гру (1 ECCYB)",
+        your_turn: "Ваш хід",
+        bot_thinking: "Бот думає...",
+        win_msg: "Перемога! +2.00 до Капіталу!",
+        lose_msg: "Бот переміг. Спробуйте ще раз!",
+        game_err: "Помилка зв'язку з сервером"
+    });
 
     let gameActive = false;
 
-    async function initiateGame() {
+    // Функція оплати та запуску гри на сервері
+    async function payAndStart() {
         try {
             log(i18n[currentLang].wait);
-            const amt = ethers.parseUnits("1", 18);
             
-            // Оплата (Переказ токенів власнику)
+            // 1. Оплата токеном (Транзакція в блокчейні)
+            const amt = ethers.parseUnits("1", 18);
             const tx = await tokenContract.transfer(OWNER_ADDR, amt);
-            await tx.wait();
+            await tx.wait(); // Чекаємо підтвердження
+            
+            log("Payment confirmed. Initializing server...");
 
-            // Повідомляємо бекенд про нову гру
+            // 2. Створення гри в БД через PHP
             const resp = await fetch(API_URL, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ action: 'game_start', address: userAddress })
+                body: JSON.stringify({ 
+                    action: 'game_start', 
+                    address: userAddress 
+                })
             });
             const res = await resp.json();
 
@@ -100,36 +117,53 @@
                 gameActive = true;
                 document.getElementById('startBtn').style.display = 'none';
                 document.getElementById('gameBoard').style.display = 'grid';
-                document.getElementById('gameStatus').innerText = i18n[currentLang].yourTurn;
+                document.getElementById('gameStatus').innerText = i18n[currentLang].your_turn;
+                // Малюємо порожнє поле 15x15
                 renderBoard(Array(15).fill().map(() => Array(15).fill(null)));
-                log(i18n[currentLang].ok);
             }
         } catch (e) {
             log("Error: " + e.message);
         }
     }
 
+    // Функція ходу (Відправка координат на сервер)
     async function makeMove(r, c) {
         if (!gameActive) return;
+        
+        document.getElementById('gameStatus').innerText = i18n[currentLang].bot_thinking;
+
         try {
             const resp = await fetch(API_URL, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ action: 'game_move', address: userAddress, row: r, col: c })
+                body: JSON.stringify({ 
+                    action: 'game_move', 
+                    address: userAddress, 
+                    row: r, col: c 
+                })
             });
             const res = await resp.json();
             
-            if (res.status === "error") { alert(res.message); return; }
+            if (res.status === "error") {
+                alert(res.message);
+                document.getElementById('gameStatus').innerText = i18n[currentLang].your_turn;
+                return;
+            }
 
+            // Сервер повертає оновлений масив board
             renderBoard(res.board);
 
             if (res.status === "victory") {
-                finish(i18n[currentLang].winMsg);
-                await syncData(); // Оновлення балансу в UI
+                handleFinish(i18n[currentLang].win_msg);
+                await syncData(); // Оновлюємо Capital в UI (вже є в app.js)
             } else if (res.status === "defeat") {
-                finish(i18n[currentLang].loseMsg);
+                handleFinish(i18n[currentLang].lose_msg);
+            } else {
+                document.getElementById('gameStatus').innerText = i18n[currentLang].your_turn;
             }
-        } catch (e) { log("System error"); }
+        } catch (e) {
+            log(i18n[currentLang].game_err);
+        }
     }
 
     function renderBoard(board) {
@@ -139,24 +173,27 @@
             for (let c = 0; c < 15; c++) {
                 const cell = document.createElement('div');
                 cell.className = 'cell';
-                if (board[r][c] === 'B') cell.classList.add('black');
-                if (board[r][c] === 'W') cell.classList.add('white');
+                if (board[r][c] === 'B') cell.classList.add('black'); // Гравець
+                if (board[r][c] === 'W') cell.classList.add('white'); // Бот
                 cell.onclick = () => makeMove(r, c);
                 grid.appendChild(cell);
             }
         }
     }
 
-    function finish(msg) {
+    function handleFinish(msg) {
         gameActive = false;
         document.getElementById('gameStatus').innerText = msg;
         document.getElementById('startBtn').style.display = 'block';
+        alert(msg);
     }
 
-    // Ініціалізація мови при завантаженні
-    window.addEventListener('load', () => {
-        setTimeout(() => { updateUI(); }, 200);
-    });
+    // Оновлення мови при зміні (якщо викликається setLang з app.js)
+    const originalSetLang = window.setLang;
+    window.setLang = (l) => {
+        if(originalSetLang) originalSetLang(l);
+        updateUI(); // Ваша стандартна функція з app.js
+    };
 </script>
 </body>
 </html>
