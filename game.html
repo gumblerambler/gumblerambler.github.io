@@ -186,15 +186,27 @@
         }
     }
 
-    function handleFinish(msg) {
-        gameActive = false;
-        setTimeout(async () => {
-            await syncData();
-        }, 500);        
-        document.getElementById('gameStatus').innerText = msg;
-        document.getElementById('startBtn').style.display = 'block';
-        alert(msg);
+async function handleFinish(msg) {
+    gameActive = false;
+    document.getElementById('gameStatus').innerText = msg;
+    document.getElementById('startBtn').style.display = 'block';
+    
+    alert(msg);
+
+    // Безпечне оновлення без блокування сторінки
+    try {
+        log("Синхронізація даних...");
+        // Викликаємо функцію з app.js, якщо вона є
+        if (typeof syncData === "function") {
+            await syncData(); 
+        } else {
+            // Якщо syncData немає, просто перезавантажимо дані користувача
+            await fetchUserData(); 
+        }
+    } catch (e) {
+        console.warn("Дані не оновлено автоматично, але гра завершена.");
     }
+}
 
     // Оновлення мови при зміні (якщо викликається setLang з app.js)
     const originalSetLang = window.setLang;
