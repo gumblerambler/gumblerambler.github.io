@@ -318,34 +318,74 @@ async function sendGrant() {
     }
 }
 
-async function updateDBCapitalDirectly() {
-    if (!userAddress) return;
-    try {
-        // Ми використовуємо POST, щоб api.php точно побачив 'action' у $input
-        const response = await fetch(API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                action: 'get_user_data', 
-                address: userAddress.toLowerCase() 
-            })
-        });
-        
-        const result = await response.json();
-        const el = document.getElementById('dbCapital');
-        
-        if (el && result.status === "success") {
-          
-            const cleanCapital = parseFloat(result.capital).toFixed(2);
-            el.innerText = cleanCapital + " ECCYB";
-            console.log("Капітал оновлено: " + cleanCapital);
-        } else {
-            console.error("Помилка API:", result.error || result.message);
+    async function updateDBCapitalDirectly() {
+        if (!userAddress) return;
+        try {
+            // Ми використовуємо POST, щоб api.php точно побачив 'action' у $input
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    action: 'get_user_data', 
+                    address: userAddress.toLowerCase() 
+                })
+            });
+            
+            const result = await response.json();
+            const el = document.getElementById('dbCapital');
+            
+            if (el && result.status === "success") {
+              
+                const cleanCapital = parseFloat(result.capital).toFixed(2);
+                el.innerText = cleanCapital + " ECCYB";
+                console.log("Капітал оновлено: " + cleanCapital);
+            } else {
+                console.error("Помилка API:", result.error || result.message);
+            }
+        } catch (err) {
+            console.error("Мережева помилка при оновленні капіталу:", err);
         }
-    } catch (err) {
-        console.error("Мережева помилка при оновленні капіталу:", err);
     }
-}
+
+    async function addNetworkAndToken() {
+        try {
+            if (!window.ethereum) {
+                alert("MetaMask is not installed!");
+                return;
+            }
+    
+            // 1. Додаємо мережу BitTorrent Chain (Mainnet)
+            await window.ethereum.request({
+                method: 'wallet_addEthereumChain',
+                params: [{
+                    chainId: '0xC28', // 199 у шістнадцятковій системі
+                    chainName: 'BitTorrent Chain Mainnet',
+                    nativeCurrency: { name: 'BTT', symbol: 'BTT', decimals: 18 },
+                    rpcUrls: ['https://rpc.bittorrentchain.io'],
+                    blockExplorerUrls: ['https://bttcscan.com']
+                }]
+            });
+    
+            // 2. Додаємо токен ECCYB
+            await window.ethereum.request({
+                method: 'wallet_watchAsset',
+                params: {
+                    type: 'ERC20',
+                    options: {
+                        address: TOKEN_ADDR,
+                        symbol: 'ECCYB',
+                        decimals: 18,
+                        image: 'https://projects.eccyb.org/app/logo.png', // Опціонально: посилання на логотип
+                    },
+                },
+            });
+    
+            log(currentLang === 'ua' ? "Мережу та токен додано!" : "Network and Token added!");
+        } catch (error) {
+            console.error(error);
+            log("Error: " + error.message);
+        }
+    }
 
 function showForgot(show) {
     document.getElementById('loginForm').style.display = show ? 'none' : 'block';
