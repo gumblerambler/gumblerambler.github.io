@@ -318,6 +318,19 @@ async function sendGrant() {
     }
 }
 
+async function updateDBCapital() {
+    try {
+        const resp = await fetch(`${API_URL}?action=get_user_data&address=${userAddress}`);
+        const data = await resp.json();
+        if (data && data.capital !== undefined) {
+            // Оновлюємо текст на сторінці
+            const capElem = document.getElementById('dbCapital');
+            if (capElem) capElem.innerText = parseFloat(data.capital).toFixed(2);
+        }
+    } catch (e) {
+        console.error("Не вдалося оновити капітал:", e);
+    }
+}
 
 function showForgot(show) {
     document.getElementById('loginForm').style.display = show ? 'none' : 'block';
