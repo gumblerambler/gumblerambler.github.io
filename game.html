@@ -201,7 +201,7 @@ async function handleFinish(msg) {
             await syncData(); 
         } else {
             // Якщо syncData немає, просто перезавантажимо дані користувача
-            await fetchUserData(); 
+            await updateDBCapitalDirectly(); 
         }
     } catch (e) {
         console.warn("Дані не оновлено автоматично, але гра завершена.");
