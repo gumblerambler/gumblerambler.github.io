@@ -160,7 +160,7 @@
                     
                     // Якщо після syncData капітал все ще старий, спробуємо пряме оновлення:
                     if (res.status === "victory") {
-                        fetchUserData();
+                        updateDBCapitalDirectly();
                     }
                 }, 500);
                 
