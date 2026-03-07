@@ -136,39 +136,31 @@
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ action: 'game_move', address: userAddress, row: r, col: c })
             });
+            
             const res = await resp.json();
     
-            // ОНОВЛЮЄМО ПОЛЕ ГРИ (візуально)
-            renderBoard(res.board);
+            // --- ДОДАЙТЕ ЦЮ ПЕРЕВІРКУ ---
+            if (res.status === "error") {
+                // Якщо сервер каже, що клітинка зайнята, просто ігноруємо хід
+                log(res.message); // Виведе "Cell already occupied" або подібне
+                return; 
+            }
+    
+            // Якщо board прийшов — малюємо
+            if (res.board) {
+                renderBoard(res.board);
+            } else {
+                return; // Виходимо, якщо даних про поле немає
+            }
+            // ---------------------------
     
             if (res.status === "victory" || res.status === "defeat") {
-                gameActive = false; // Зупиняємо гру
-                
-                // Визначаємо повідомлення
-                const msg = res.status === "victory" ? i18n[currentLang].win_msg : i18n[currentLang].lose_msg;
-                
-                // Оновлюємо статусний текст
-                document.getElementById('gameStatus').innerText = msg;
-                
-                // Показуємо кнопку початку нової гри
-                document.getElementById('startBtn').style.display = 'block';
-                document.getElementById('startBtn').innerText = i18n[currentLang].btn_start;
-    
-                // --- ПРИМУСОВЕ ОНОВЛЕННЯ КАПІТАЛУ ---
-                // Чекаємо 500мс, щоб база даних встигла обробити запит
-                setTimeout(async () => {
-                    await syncData(); // Ця функція має бути в app.js
-                    
-                    // Якщо після syncData капітал все ще старий, спробуємо пряме оновлення:
-                    if (res.status === "victory") {
-                        await updateDBCapitalDirectly();
-                    }
-                }, 500);
-                
-                alert(msg);
+                // ... логіка завершення гри ...
+                handleFinish(res.status === "victory" ? i18n[currentLang].win_msg : i18n[currentLang].lose_msg);
             }
         } catch (e) {
-            log("Error: " + e.message);
+            console.error("Помилка ходу:", e);
+            // Замість вильоту гри, просто пишемо в консоль
         }
     }
 
