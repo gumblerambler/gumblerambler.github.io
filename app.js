@@ -321,25 +321,29 @@ async function sendGrant() {
 async function updateDBCapitalDirectly() {
     if (!userAddress) return;
     try {
-        // Робимо запит до API, який ми щойно перевірили
-        const r = await fetch(`${API_URL}?action=get_user_data&address=${userAddress.toLowerCase()}`);
-        const d = await r.json();
+        // Ми використовуємо POST, щоб api.php точно побачив 'action' у $input
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                action: 'get_user_data', 
+                address: userAddress.toLowerCase() 
+            })
+        });
         
-        // Знаходимо елемент, де відображається Капітал
+        const result = await response.json();
         const el = document.getElementById('dbCapital');
         
-        if (el && d.status === "success") {
-            // Перетворюємо рядок "5024.0000..." на гарне число "5024.00"
-            const cleanCapital = parseFloat(d.capital).toFixed(2);
-            el.innerText = cleanCapital;
-            
-            // Також оновлюємо глобальну змінну, якщо вона використовується в app.js
-            window.userCapital = cleanCapital; 
-            
-            console.log("UI Updated: Capital is now " + cleanCapital);
+        if (el && result.status === "success") {
+          
+            const cleanCapital = parseFloat(result.capital).toFixed(2);
+            el.innerText = cleanCapital + " ECCYB";
+            console.log("Капітал оновлено: " + cleanCapital);
+        } else {
+            console.error("Помилка API:", result.error || result.message);
         }
     } catch (err) {
-        console.error("Помилка візуального оновлення:", err);
+        console.error("Мережева помилка при оновленні капіталу:", err);
     }
 }
 
