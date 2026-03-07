@@ -8,7 +8,7 @@ const API_URL = "https://projects.eccyb.org/app/api.php";
 // ua: linkForgot: "Забули пароль?", resetTitle: "Відновлення пароля"
 const i18n = {
     en: {
-        home: "Home", stake: "Staking", wallet: "Transfer", admin: "Admin", logout: "Logout",
+        home: "Home", stake: "Staking", wallet: "Transfer", admin: "Admin", logout: "Logout", game: "Gomoku",
         gas: "Gas", bal: "Token", connBtn: "Connect MetaMask", logOutMsg: "Session ended.",
         wait: "Processing...", ok: "Success!", stakeTitle: "Deposit", withdrawTitle: "Withdraw",
         btnStake: "Stake", btnClaim: "Claim", btnEarly: "Early exit", btnSend: "Send",
@@ -20,7 +20,7 @@ const i18n = {
         infoAdmin: "Management of the firm's central treasury: audit student balances, distribute initial grants, and gas support."
     },
     ua: {
-        home: "Головна", stake: "Стейкінг", wallet: "Переказ", admin: "Адмін", logout: "Вийти",
+        home: "Головна", stake: "Стейкінг", wallet: "Переказ", admin: "Адмін", logout: "Вийти", game: "Гра 5-в-ряд",
         gas: "Газ", bal: "Токен", connBtn: "Підключити MetaMask", logOutMsg: "Сесію завершено.",
         wait: "Обробка...", ok: "Успішно!", stakeTitle: "Депозит",  withdrawTitle: "Повернення",
         btnStake: "Вкласти", btnClaim: "Повернути з прибутком", btnEarly: "Повернути без прибутку",
