@@ -188,6 +188,9 @@
 
     function handleFinish(msg) {
         gameActive = false;
+        setTimeout(async () => {
+            await syncData();
+        }, 500);        
         document.getElementById('gameStatus').innerText = msg;
         document.getElementById('startBtn').style.display = 'block';
         alert(msg);
