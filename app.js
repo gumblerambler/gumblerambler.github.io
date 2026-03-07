@@ -318,24 +318,6 @@ async function sendGrant() {
     }
 }
 
-async function fetchUserData() {
-    if (!userAddress) return;
-    try {
-        // Запит до вашого api.php (кафедра ІТ ЗІЕІТ)
-        const response = await fetch(`${API_URL}?action=get_user_data&address=${userAddress}`);
-        const data = await response.json();
-        
-        if (data.status === "success" || data.capital !== undefined) {
-            const capElem = document.getElementById('dbCapital');
-            if (capElem) {
-                capElem.innerText = parseFloat(data.capital).toFixed(2);
-            }
-        }
-    } catch (err) {
-        console.error("Помилка отримання капіталу:", err);
-    }
-}
-
 async function updateDBCapitalDirectly() {
     if (!userAddress) return;
     try {
