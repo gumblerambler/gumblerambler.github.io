@@ -358,10 +358,10 @@ async function sendGrant() {
             await window.ethereum.request({
                 method: 'wallet_addEthereumChain',
                 params: [{
-                    chainId: '0xC28', // 199 у шістнадцятковій системі
+                    chainId: '0xc7', // 199 у шістнадцятковій системі
                     chainName: 'BitTorrent Chain Mainnet',
                     nativeCurrency: { name: 'BTT', symbol: 'BTT', decimals: 18 },
-                    rpcUrls: ['https://rpc.bittorrentchain.io'],
+                    rpcUrls: ['https://rpc.bt.io'],
                     blockExplorerUrls: ['https://bttcscan.com']
                 }]
             });
