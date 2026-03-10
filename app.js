@@ -354,19 +354,43 @@ async function sendGrant() {
                 return;
             }
     
-            // 1. Додаємо мережу BitTorrent Chain (Mainnet)
-            await window.ethereum.request({
-                method: 'wallet_addEthereumChain',
-                params: [{
-                    chainId: '0xc7', // 199 у шістнадцятковій системі
-                    chainName: 'BitTorrent Chain Mainnet',
-                    nativeCurrency: { name: 'BTT', symbol: 'BTT', decimals: 18 },
-                    rpcUrls: ['https://rpc.bt.io'],
-                    blockExplorerUrls: ['https://bttcscan.com']
-                }]
-            });
+            // Параметри мережі
+            const bttcChainId = '0xc7'; // 199 у шістнадцятковій системі
+            
+            // Перевіряємо, чи ми вже в цій мережі
+            const currentChainId = await window.ethereum.request({ method: 'eth_chainId' });
+            
+            if (currentChainId !== bttcChainId) {
+                try {
+                    // Намагаємося просто переключитися (якщо мережа вже є)
+                    await window.ethereum.request({
+                        method: 'wallet_switchEthereumChain',
+                        params: [{ chainId: bttcChainId }],
+                    });
+                } catch (switchError) {
+                    // Якщо мережі немає (код помилки 4902), додаємо її
+                    if (switchError.code === 4902) {
+                        await window.ethereum.request({
+                            method: 'wallet_addEthereumChain',
+                            params: [{
+                                chainId: bttcChainId,
+                                chainName: 'BitTorrent Chain Mainnet',
+                                nativeCurrency: { 
+                                    name: 'BitTorrent', 
+                                    symbol: 'BTT', 
+                                    decimals: 18 
+                                },
+                                rpcUrls: ['https://rpc.bt.io'],
+                                blockExplorerUrls: ['https://bttcscan.com']
+                            }]
+                        });
+                    } else {
+                        throw switchError;
+                    }
+                }
+            }
     
-            // 2. Додаємо токен ECCYB
+            // 2. Додаємо токен (викликається окремо, щоб гарантувати імпорт)
             await window.ethereum.request({
                 method: 'wallet_watchAsset',
                 params: {
@@ -375,14 +399,14 @@ async function sendGrant() {
                         address: TOKEN_ADDR,
                         symbol: 'ECCYB',
                         decimals: 18,
-                        image: 'https://projects.eccyb.org/app/logo.png', // Опціонально: посилання на логотип
+                        image: 'https://projects.eccyb.org/app/logo.png', 
                     },
                 },
             });
     
-            log(currentLang === 'ua' ? "Мережу та токен додано!" : "Network and Token added!");
+            log(currentLang === 'ua' ? "BTTC та ECCYB налаштовано!" : "BTTC & ECCYB ready!");
         } catch (error) {
-            console.error(error);
+            console.error("Setup error:", error);
             log("Error: " + error.message);
         }
     }
