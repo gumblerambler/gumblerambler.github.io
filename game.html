@@ -186,10 +186,17 @@
 
 async function handleFinish(msg) {
     gameActive = false;
+    const statusEl = document.getElementById('gameStatus');
+    if (statusEl) {
+        statusEl.innerText = msg;
+        statusEl.style.color = (msg.includes("win") || msg.includes("Перемога")) ? "green" : "red";
+    }
+    
+    document.getElementById('startBtn').style.display = 'block';
     document.getElementById('gameStatus').innerText = msg;
     document.getElementById('startBtn').style.display = 'block';
     
-    alert(msg);
+    //alert(msg);
 
     // Безпечне оновлення без блокування сторінки
     try {
