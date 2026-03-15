@@ -156,7 +156,12 @@
     
             if (res.status === "victory" || res.status === "defeat") {
                 // ... логіка завершення гри ...
-                handleFinish(res.status === "victory" ? i18n[currentLang].win_msg : i18n[currentLang].lose_msg);
+                renderBoard(res.board);
+                            // Додаємо невелику затримку перед повідомленням
+                setTimeout(() => {
+                    handleFinish(res.status === "victory" ? i18n[currentLang].win_msg : i18n[currentLang].lose_msg);
+                }, 300); // 300мс достатньо, щоб гравець побачив хід
+                
             }
         } catch (e) {
             console.error("Помилка ходу:", e);
