@@ -131,7 +131,9 @@
 
     async function makeMove(r, c) {
         if (!gameActive) return;
-    
+
+        let lastMove = null;
+        
         try {
             const resp = await fetch(API_URL, {
                 method: 'POST',
@@ -147,7 +149,7 @@
                 log(res.message); // Виведе "Cell already occupied" або подібне
                 return; 
             }
-    
+             lastMove = { row: row, col: col };
             // Якщо board прийшов — малюємо
             if (res.board) {
                 renderBoard(res.board);
@@ -174,7 +176,7 @@
         }
     }
 
-    function renderBoard(board) {
+    function renderBoard(board, lastMove) {
         const grid = document.getElementById('gameBoard');
         grid.innerHTML = '';
         for (let r = 0; r < 15; r++) {
@@ -183,10 +185,13 @@
                 cell.className = 'cell';
                 if (board[r][c] === 'B') cell.classList.add('black'); // Гравець
                 if (board[r][c] === 'W') cell.classList.add('white'); // Бот
+                if (lastMove && lastMove.row === r && lastMove.col === c) {
+                    cell.classList.add('last-move');
+                }
                 cell.onclick = () => makeMove(r, c);
                 grid.appendChild(cell);
             }
-        }
+        }   
     }
 
 async function handleFinish(msg) {
