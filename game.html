@@ -23,7 +23,14 @@
         /* Стилі для фішок (Чорні - гравець, Білі - бот) */
         .cell.black::after { content: ""; width: 18px; height: 18px; background: #000; border-radius: 50%; }
         .cell.white::after { content: ""; width: 18px; height: 18px; background: #fff; border: 1px solid #000; border-radius: 50%; }
-        
+        /* ПІДСВІЧУВАННЯ ОСТАННЬОГО ХОДУ */
+        .cell.last-move {
+            box-shadow: 0 0 10px 2px gold;
+            border: 2px solid gold;
+            transform: scale(1.05);
+            z-index: 10;
+            position: relative;
+        }
         #gameStatus { text-align: center; font-weight: bold; margin: 10px 0; min-height: 1.2em; color: var(--u-blue); }
         .game-panel { text-align: center; }
     </style>
