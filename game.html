@@ -152,7 +152,7 @@
              
             // Якщо board прийшов — малюємо
             if (res.board) {
-                lastMove = { row: r, col: c };
+                lastMove = res.last_move || { row: r, col: c }; 
                 renderBoard(res.board, lastMove);
             } else {
                 return; // Виходимо, якщо даних про поле немає
