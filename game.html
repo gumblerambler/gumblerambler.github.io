@@ -24,13 +24,7 @@
         .cell.black::after { content: ""; width: 18px; height: 18px; background: #000; border-radius: 50%; }
         .cell.white::after { content: ""; width: 18px; height: 18px; background: #fff; border: 1px solid #000; border-radius: 50%; }
         /* ПІДСВІЧУВАННЯ ОСТАННЬОГО ХОДУ */
-        .cell.last-move {
-            box-shadow: 0 0 10px 2px gold;
-            border: 2px solid gold;
-            transform: scale(1.05);
-            z-index: 10;
-            position: relative;
-        }
+        .cell.last-move::after { content: ""; width: 18px; height: 18px; background: #600; border: 1px solid #600; border-radius: 50%; } 
         #gameStatus { text-align: center; font-weight: bold; margin: 10px 0; min-height: 1.2em; color: var(--u-blue); }
         .game-panel { text-align: center; }
     </style>
@@ -159,7 +153,7 @@
              lastMove = { row: row, col: col };
             // Якщо board прийшов — малюємо
             if (res.board) {
-                renderBoard(res.board);
+                renderBoard(res.board, lastMove);
             } else {
                 return; // Виходимо, якщо даних про поле немає
             }
