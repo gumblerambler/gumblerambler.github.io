@@ -161,7 +161,7 @@
                     let message;
                     if (res.status === "victory") message = i18n[currentLang].win_msg;
                     else if (res.status === "defeat") message = i18n[currentLang].lose_msg;
-                    else message = (currentLang === 'ua' ? "Нічия! Поле заповнене." : "Draw! Board is full.");
+                    else message = i18n[currentLang].draw_msg;// (currentLang === 'ua' ? "Нічия! Поле заповнене." : "Draw! Board is full.");
                     
                     handleFinish(message); // Викликаємо вікно завершення
                 }, 300);
