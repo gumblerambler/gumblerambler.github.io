@@ -154,9 +154,17 @@
             }
             // ---------------------------
     
-            if (res.status === "victory" || res.status === "defeat") {
+            if (res.status === "victory" || res.status === "defeat"|| res.status === "draw") {
                 // ... логіка завершення гри ...
-                handleFinish(res.status === "victory" ? i18n[currentLang].win_msg : i18n[currentLang].lose_msg);
+                //handleFinish(res.status === "victory" ? i18n[currentLang].win_msg : i18n[currentLang].lose_msg);
+                setTimeout(() => {
+                    let message;
+                    if (res.status === "victory") message = i18n[currentLang].win_msg;
+                    else if (res.status === "defeat") message = i18n[currentLang].lose_msg;
+                    else message = (currentLang === 'ua' ? "Нічия! Поле заповнене." : "Draw! Board is full.");
+                    
+                    handleFinish(message); // Викликаємо вікно завершення
+                }, 300);
             }
         } catch (e) {
             console.error("Помилка ходу:", e);
