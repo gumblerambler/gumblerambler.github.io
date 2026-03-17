@@ -93,6 +93,7 @@
 
     let gameActive = false;
     let lastMove = null;
+    let previousBoard = null;
     
     // Функція оплати та запуску гри на сервері
     async function payAndStart() {
@@ -152,7 +153,8 @@
              
             // Якщо board прийшов — малюємо
             if (res.board) {
-                lastMove = res.last_move || { row: r, col: c }; 
+                //lastMove = res.last_move || { row: r, col: c }; 
+                lastMove = findLastMove(res.board);
                 renderBoard(res.board, lastMove);
             } else {
                 return; // Виходимо, якщо даних про поле немає
@@ -195,6 +197,29 @@
         }   
     }
 
+function findLastMove(newBoard) {
+    if (!previousBoard) {
+        // Якщо це перший хід, зберігаємо дошку і виходимо
+        previousBoard = JSON.parse(JSON.stringify(newBoard));
+        return null;
+    }
+    
+    // Шукаємо клітинку, яка змінилася
+    for (let r = 0; r < 15; r++) {
+        for (let c = 0; c < 15; c++) {
+            if (previousBoard[r][c] !== newBoard[r][c]) {
+                // Знайшли останній хід!
+                previousBoard = JSON.parse(JSON.stringify(newBoard));
+                return { row: r, col: c };
+            }
+        }
+    }
+    
+    // Якщо нічого не змінилося
+    previousBoard = JSON.parse(JSON.stringify(newBoard));
+    return null;
+}
+    
 async function handleFinish(msg) {
     gameActive = false;
     document.getElementById('gameStatus').innerText = msg;
