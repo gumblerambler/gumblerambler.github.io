@@ -150,7 +150,7 @@
                 log(res.message); // Виведе "Cell already occupied" або подібне
                 return; 
             }
-             lastMove = { row: row, col: col };
+             lastMove = { row: r, col: c };
             // Якщо board прийшов — малюємо
             if (res.board) {
                 renderBoard(res.board, lastMove);
