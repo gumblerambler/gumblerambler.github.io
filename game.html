@@ -99,7 +99,8 @@
     });
 
     let gameActive = false;
-
+    let lastMove = null;
+    
     // Функція оплати та запуску гри на сервері
     async function payAndStart() {
         try {
@@ -139,8 +140,7 @@
     async function makeMove(r, c) {
         if (!gameActive) return;
 
-        let lastMove = null;
-        
+       
         try {
             const resp = await fetch(API_URL, {
                 method: 'POST',
