@@ -97,87 +97,85 @@
     
     // Функція оплати та запуску гри на сервері
     async function payAndStart() {
-        try {
-            log(i18n[currentLang].wait);
-            
-            // 1. Оплата токеном (Транзакція в блокчейні)
-            const amt = ethers.parseUnits("1", 18);
-            const tx = await tokenContract.transfer(OWNER_ADDR, amt);
-            await tx.wait(); // Чекаємо підтвердження
-            
-            log("Payment confirmed. Initializing server...");
+    try {
+        log(i18n[currentLang].wait);
+        
+        const amt = ethers.parseUnits("1", 18);
+        const tx = await tokenContract.transfer(OWNER_ADDR, amt);
+        await tx.wait();
+        
+        log("Payment confirmed. Initializing server...");
 
-            // 2. Створення гри в БД через PHP
-            const resp = await fetch(API_URL, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ 
-                    action: 'game_start', 
-                    address: userAddress 
-                })
-            });
-            const res = await resp.json();
+        const resp = await fetch(API_URL, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ 
+                action: 'game_start', 
+                address: userAddress 
+            })
+        });
+        const res = await resp.json();
 
-            if (res.status === "success") {
-                gameActive = true;
-                document.getElementById('startBtn').style.display = 'none';
-                document.getElementById('gameBoard').style.display = 'grid';
-                document.getElementById('gameStatus').innerText = i18n[currentLang].your_turn;
-                // Малюємо порожнє поле 15x15
-                renderBoard(Array(15).fill().map(() => Array(15).fill(null)));
-            }
-        } catch (e) {
-            log("Error: " + e.message);
+        if (res.status === "success") {
+            gameActive = true;
+            document.getElementById('startBtn').style.display = 'none';
+            document.getElementById('gameBoard').style.display = 'grid';
+            document.getElementById('gameStatus').innerText = i18n[currentLang].your_turn;
+            
+            // Скидаємо previousBoard для нової гри
+            previousBoard = null;
+            lastMove = null;
+            
+            // Малюємо порожнє поле 15x15
+            renderBoard(Array(15).fill().map(() => Array(15).fill(null)), null);
         }
+    } catch (e) {
+        log("Error: " + e.message);
     }
+}   
 
-    async function makeMove(r, c) {
-        if (!gameActive) return;
+async function makeMove(r, c) {
+    if (!gameActive) return;
 
-       
-        try {
-            const resp = await fetch(API_URL, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ action: 'game_move', address: userAddress, row: r, col: c })
-            });
-            
-            const res = await resp.json();
-    
-            // --- ДОДАЙТЕ ЦЮ ПЕРЕВІРКУ ---
-            if (res.status === "error") {
-                // Якщо сервер каже, що клітинка зайнята, просто ігноруємо хід
-                log(res.message); // Виведе "Cell already occupied" або подібне
-                return; 
-            }
-             
-            // Якщо board прийшов — малюємо
-            if (res.board) {
-                //lastMove = res.last_move || { row: r, col: c }; 
-                lastMove = findLastMove(res.board);
-                renderBoard(res.board, lastMove);
-            } else {
-                return; // Виходимо, якщо даних про поле немає
-            }
-            // ---------------------------
-    
-            if (res.status === "victory" || res.status === "defeat"|| res.status === "draw") {
-                // ... логіка завершення гри ...
-                //handleFinish(res.status === "victory" ? i18n[currentLang].win_msg : i18n[currentLang].lose_msg);
-                setTimeout(() => {
-                    let message;
-                    if (res.status === "victory") message = i18n[currentLang].win_msg;
-                    else if (res.status === "defeat") message = i18n[currentLang].lose_msg;
-                    else message = i18n[currentLang].draw_msg;// (currentLang === 'ua' ? "Нічия! Поле заповнене." : "Draw! Board is full.");
-                    
-                    handleFinish(message); // Викликаємо вікно завершення
-                }, 300);
-            }
-        } catch (e) {
-            console.error("Помилка ходу:", e);
-            // Замість вильоту гри, просто пишемо в консоль
+    try {
+        const resp = await fetch(API_URL, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ action: 'game_move', address: userAddress, row: r, col: c })
+        });
+        
+        const res = await resp.json();
+
+        if (res.status === "error") {
+            log(res.message);
+            return; 
         }
+         
+        if (res.board) {
+            // ВАЖЛИВО: Знаходимо останній хід (той, який щойно з'явився)
+            const newLastMove = findLastMove(res.board);
+            if (newLastMove) {
+                lastMove = newLastMove;
+            }
+            renderBoard(res.board, lastMove);
+        } else {
+            return;
+        }
+
+        if (res.status === "victory" || res.status === "defeat"|| res.status === "draw") {
+            setTimeout(() => {
+                let message;
+                if (res.status === "victory") message = i18n[currentLang].win_msg;
+                else if (res.status === "defeat") message = i18n[currentLang].lose_msg;
+                else message = i18n[currentLang].draw_msg;
+                
+                handleFinish(message);
+            }, 300);
+        }
+    } catch (e) {
+        console.error("Помилка ходу:", e);
     }
+}
 
     function renderBoard(board, lastMove) {
         const grid = document.getElementById('gameBoard');
@@ -205,20 +203,22 @@ function findLastMove(newBoard) {
         return null;
     }
     
+    let lastMoveFound = null;
+    
     // Шукаємо клітинку, яка змінилася
     for (let r = 0; r < 15; r++) {
         for (let c = 0; c < 15; c++) {
             if (previousBoard[r][c] !== newBoard[r][c]) {
-                // Знайшли останній хід!
-                previousBoard = JSON.parse(JSON.stringify(newBoard));
-                return { row: r, col: c };
+                // Знайшли зміну - це останній хід
+                lastMoveFound = { row: r, col: c };
             }
         }
     }
     
-    // Якщо нічого не змінилося
+    // Оновлюємо previousBoard для наступного разу
     previousBoard = JSON.parse(JSON.stringify(newBoard));
-    return null;
+    
+    return lastMoveFound; // Повертаємо останній знайдений хід
 }
     
 async function handleFinish(msg) {
