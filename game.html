@@ -190,6 +190,7 @@
                 if (board[r][c] === 'W') cell.classList.add('white'); // Бот
                 if (lastMove && lastMove.row === r && lastMove.col === c) {
                     cell.classList.add('last-move');
+                    console.log(`Підсвічено клітинку: ${r},${c} (${board[r][c]})`);
                 }
                 cell.onclick = () => makeMove(r, c);
                 grid.appendChild(cell);
