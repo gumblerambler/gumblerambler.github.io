@@ -154,24 +154,9 @@
             }
             // ---------------------------
     
-        if (res.status === "victory" || res.status === "defeat" || res.status === "draw") {
-            renderBoard(res.board);
-            
-            setTimeout(() => {
-                let finalMsg;
-                if (res.status === "victory") {
-                    finalMsg = i18n[currentLang].win_msg;
-                } else if (res.status === "defeat") {
-                    finalMsg = i18n[currentLang].lose_msg;
-                } else {
-                    // Використовуємо ключ для нічиєї, або прямий текст, якщо ключа немає
-                    finalMsg = i18n[currentLang].draw_msg || (currentLang === 'ua' ? "Нічия! Поле заповнене." : "It's a draw!");
-                }
-                
-                handleFinish(finalMsg);
-            }, 300);
-        }
-                
+            if (res.status === "victory" || res.status === "defeat") {
+                // ... логіка завершення гри ...
+                handleFinish(res.status === "victory" ? i18n[currentLang].win_msg : i18n[currentLang].lose_msg);
             }
         } catch (e) {
             console.error("Помилка ходу:", e);
@@ -196,17 +181,10 @@
 
 async function handleFinish(msg) {
     gameActive = false;
-    const statusEl = document.getElementById('gameStatus');
-    if (statusEl) {
-        statusEl.innerText = msg;
-        statusEl.style.color = (msg.includes("win") || msg.includes("Перемога")) ? "green" : "red";
-    }
-    
-    document.getElementById('startBtn').style.display = 'block';
     document.getElementById('gameStatus').innerText = msg;
     document.getElementById('startBtn').style.display = 'block';
     
-    //alert(msg);
+    alert(msg);
 
     // Безпечне оновлення без блокування сторінки
     try {
