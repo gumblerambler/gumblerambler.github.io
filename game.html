@@ -154,13 +154,23 @@
             }
             // ---------------------------
     
-            if (res.status === "victory" || res.status === "defeat") {
-                // ... логіка завершення гри ...
-                renderBoard(res.board);
-                            // Додаємо невелику затримку перед повідомленням
-                setTimeout(() => {
-                    handleFinish(res.status === "victory" ? i18n[currentLang].win_msg : i18n[currentLang].lose_msg);
-                }, 300); // 300мс достатньо, щоб гравець побачив хід
+        if (res.status === "victory" || res.status === "defeat" || res.status === "draw") {
+            renderBoard(res.board);
+            
+            setTimeout(() => {
+                let finalMsg;
+                if (res.status === "victory") {
+                    finalMsg = i18n[currentLang].win_msg;
+                } else if (res.status === "defeat") {
+                    finalMsg = i18n[currentLang].lose_msg;
+                } else {
+                    // Використовуємо ключ для нічиєї, або прямий текст, якщо ключа немає
+                    finalMsg = i18n[currentLang].draw_msg || (currentLang === 'ua' ? "Нічия! Поле заповнене." : "It's a draw!");
+                }
+                
+                handleFinish(finalMsg);
+            }, 300);
+        }
                 
             }
         } catch (e) {
