@@ -96,43 +96,44 @@
     let previousBoard = null;
     
     // Функція оплати та запуску гри на сервері
-    async function payAndStart() {
-    try {
-        log(i18n[currentLang].wait);
-        
-        const amt = ethers.parseUnits("1", 18);
-        const tx = await tokenContract.transfer(OWNER_ADDR, amt);
-        await tx.wait();
-        
-        log("Payment confirmed. Initializing server...");
-
-        const resp = await fetch(API_URL, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ 
-                action: 'game_start', 
-                address: userAddress 
-            })
-        });
-        const res = await resp.json();
-
-        if (res.status === "success") {
-            gameActive = true;
-            document.getElementById('startBtn').style.display = 'none';
-            document.getElementById('gameBoard').style.display = 'grid';
-            document.getElementById('gameStatus').innerText = i18n[currentLang].your_turn;
+     async function payAndStart() {
+        try {
+            log(i18n[currentLang].wait);
             
-            // Скидаємо previousBoard для нової гри
-            previousBoard = null;
-            lastMove = null;
+            const amt = ethers.parseUnits("1", 18);
+            const tx = await tokenContract.transfer(OWNER_ADDR, amt);
+            await tx.wait();
             
-            // Малюємо порожнє поле 15x15
-            renderBoard(Array(15).fill().map(() => Array(15).fill(null)), null);
+            log("Payment confirmed. Initializing server...");
+    
+            const resp = await fetch(API_URL, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ 
+                    action: 'game_start', 
+                    address: userAddress 
+                })
+            });
+            const res = await resp.json();
+    
+            if (res.status === "success") {
+                gameActive = true;
+                document.getElementById('startBtn').style.display = 'none';
+                document.getElementById('gameBoard').style.display = 'grid';
+                document.getElementById('gameStatus').innerText = i18n[currentLang].your_turn;
+                
+                // Скидаємо все
+                previousBoard = null;
+                lastMove = null;
+                
+                // Створюємо пусту дошку
+                const emptyBoard = Array(15).fill().map(() => Array(15).fill(null));
+                renderBoard(emptyBoard, null);
+            }
+        } catch (e) {
+            log("Error: " + e.message);
         }
-    } catch (e) {
-        log("Error: " + e.message);
-    }
-}   
+    } 
 
 async function makeMove(r, c) {
     if (!gameActive) return;
@@ -152,11 +153,8 @@ async function makeMove(r, c) {
         }
          
         if (res.board) {
-            // ВАЖЛИВО: Знаходимо останній хід (той, який щойно з'явився)
-            const newLastMove = findLastMove(res.board);
-            if (newLastMove) {
-                lastMove = newLastMove;
-            }
+            // Просто знаходимо останній хід і малюємо
+            lastMove = findLastMove(res.board);
             renderBoard(res.board, lastMove);
         } else {
             return;
@@ -177,48 +175,56 @@ async function makeMove(r, c) {
     }
 }
 
-    function renderBoard(board, lastMove) {
-        const grid = document.getElementById('gameBoard');
-        grid.innerHTML = '';
-        for (let r = 0; r < 15; r++) {
-            for (let c = 0; c < 15; c++) {
-                const cell = document.createElement('div');
-                cell.className = 'cell';
-                if (board[r][c] === 'B') cell.classList.add('black'); // Гравець
-                if (board[r][c] === 'W') cell.classList.add('white'); // Бот
-                if (lastMove && lastMove.row === r && lastMove.col === c) {
-                    cell.classList.add('last-move');
-                    console.log(`Підсвічено клітинку: ${r},${c} (${board[r][c]})`);
-                }
-                cell.onclick = () => makeMove(r, c);
-                grid.appendChild(cell);
+function renderBoard(board, lastMove) {
+    const grid = document.getElementById('gameBoard');
+    if (!grid) return;
+    
+    grid.innerHTML = '';
+    
+    for (let r = 0; r < 15; r++) {
+        for (let c = 0; c < 15; c++) {
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+            
+            if (board[r][c] === 'B') cell.classList.add('black');
+            if (board[r][c] === 'W') cell.classList.add('white');
+            
+            // Підсвічуємо останній хід
+            if (lastMove && lastMove.row === r && lastMove.col === c) {
+                cell.classList.add('last-move');
             }
-        }   
+            
+            cell.onclick = () => makeMove(r, c);
+            grid.appendChild(cell);
+        }
     }
+}
 
 function findLastMove(newBoard) {
     if (!previousBoard) {
-        // Якщо це перший хід, зберігаємо дошку і виходимо
         previousBoard = JSON.parse(JSON.stringify(newBoard));
         return null;
     }
     
-    let lastMoveFound = null;
+    let lastRow = -1;
+    let lastCol = -1;
     
-    // Шукаємо клітинку, яка змінилася
+    // Проходимо всю дошку і запам'ятовуємо ОСТАННЮ зміну
     for (let r = 0; r < 15; r++) {
         for (let c = 0; c < 15; c++) {
             if (previousBoard[r][c] !== newBoard[r][c]) {
-                // Знайшли зміну - це останній хід
-                lastMoveFound = { row: r, col: c };
+                lastRow = r;
+                lastCol = c;
             }
         }
     }
     
-    // Оновлюємо previousBoard для наступного разу
     previousBoard = JSON.parse(JSON.stringify(newBoard));
     
-    return lastMoveFound; // Повертаємо останній знайдений хід
+    if (lastRow !== -1) {
+        return { row: lastRow, col: lastCol };
+    }
+    return null;
 }
     
 async function handleFinish(msg) {
