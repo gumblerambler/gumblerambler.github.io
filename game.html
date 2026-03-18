@@ -96,44 +96,43 @@
     let previousBoard = null;
     
     // Функція оплати та запуску гри на сервері
-     async function payAndStart() {
-        try {
-            log(i18n[currentLang].wait);
+async function payAndStart() {
+    try {
+        log(i18n[currentLang].wait);
+        
+        const amt = ethers.parseUnits("1", 18);
+        const tx = await tokenContract.transfer(OWNER_ADDR, amt);
+        await tx.wait();
+        
+        log("Payment confirmed. Initializing server...");
+
+        const resp = await fetch(API_URL, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ 
+                action: 'game_start', 
+                address: userAddress 
+            })
+        });
+        const res = await resp.json();
+
+        if (res.status === "success") {
+            gameActive = true;
+            document.getElementById('startBtn').style.display = 'none';
+            document.getElementById('gameBoard').style.display = 'grid';
+            document.getElementById('gameStatus').innerText = i18n[currentLang].your_turn;
             
-            const amt = ethers.parseUnits("1", 18);
-            const tx = await tokenContract.transfer(OWNER_ADDR, amt);
-            await tx.wait();
+            // Скидаємо previousBoard
+            previousBoard = null;
             
-            log("Payment confirmed. Initializing server...");
-    
-            const resp = await fetch(API_URL, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ 
-                    action: 'game_start', 
-                    address: userAddress 
-                })
-            });
-            const res = await resp.json();
-    
-            if (res.status === "success") {
-                gameActive = true;
-                document.getElementById('startBtn').style.display = 'none';
-                document.getElementById('gameBoard').style.display = 'grid';
-                document.getElementById('gameStatus').innerText = i18n[currentLang].your_turn;
-                
-                // Скидаємо все
-                previousBoard = null;
-                lastMove = null;
-                
-                // Створюємо пусту дошку
-                const emptyBoard = Array(15).fill().map(() => Array(15).fill(null));
-                renderBoard(emptyBoard, null);
-            }
-        } catch (e) {
-            log("Error: " + e.message);
+            // Пуста дошка
+            const emptyBoard = Array(15).fill().map(() => Array(15).fill(null));
+            renderBoard(emptyBoard, null);
         }
-    } 
+    } catch (e) {
+        log("Error: " + e.message);
+    }
+}
 
 async function makeMove(r, c) {
     if (!gameActive) return;
@@ -153,20 +152,34 @@ async function makeMove(r, c) {
         }
          
         if (res.board) {
-            // Просто знаходимо останній хід і малюємо
-            lastMove = findLastMove(res.board);
-            renderBoard(res.board, lastMove);
-        } else {
-            return;
+            // ВИЗНАЧАЄМО ХІД БОТА
+            let botMove = null;
+            
+            if (previousBoard) {
+                // Шукаємо клітинку, яка стала БІЛОЮ (W) там, де раніше було пусто
+                for (let row = 0; row < 15; row++) {
+                    for (let col = 0; col < 15; col++) {
+                        if (previousBoard[row][col] === null && res.board[row][col] === 'W') {
+                            botMove = { row, col };
+                        }
+                    }
+                }
+            }
+            
+            // Оновлюємо previousBoard
+            previousBoard = JSON.parse(JSON.stringify(res.board));
+            
+            // Малюємо дошку, передаючи тільки хід бота (якщо є)
+            renderBoard(res.board, botMove);
         }
 
+        // Обробка завершення гри...
         if (res.status === "victory" || res.status === "defeat"|| res.status === "draw") {
             setTimeout(() => {
                 let message;
                 if (res.status === "victory") message = i18n[currentLang].win_msg;
                 else if (res.status === "defeat") message = i18n[currentLang].lose_msg;
                 else message = i18n[currentLang].draw_msg;
-                
                 handleFinish(message);
             }, 300);
         }
@@ -175,10 +188,8 @@ async function makeMove(r, c) {
     }
 }
 
-function renderBoard(board, lastMove) {
+function renderBoard(board, botMove) {
     const grid = document.getElementById('gameBoard');
-    if (!grid) return;
-    
     grid.innerHTML = '';
     
     for (let r = 0; r < 15; r++) {
@@ -189,8 +200,8 @@ function renderBoard(board, lastMove) {
             if (board[r][c] === 'B') cell.classList.add('black');
             if (board[r][c] === 'W') cell.classList.add('white');
             
-            // Підсвічуємо останній хід
-            if (lastMove && lastMove.row === r && lastMove.col === c) {
+            // Підсвічуємо ТІЛЬКИ хід бота
+            if (botMove && botMove.row === r && botMove.col === c) {
                 cell.classList.add('last-move');
             }
             
