@@ -202,29 +202,26 @@ function renderBoard(board, lastMove) {
 
 function findLastMove(newBoard) {
     if (!previousBoard) {
+        // Якщо це перший хід, просто зберігаємо дошку
         previousBoard = JSON.parse(JSON.stringify(newBoard));
         return null;
     }
     
-    let lastRow = -1;
-    let lastCol = -1;
+    let lastMoveFound = null;
     
-    // Проходимо всю дошку і запам'ятовуємо ОСТАННЮ зміну
+    // Шукаємо ВСІ зміни і запам'ятовуємо ОСТАННЮ
     for (let r = 0; r < 15; r++) {
         for (let c = 0; c < 15; c++) {
             if (previousBoard[r][c] !== newBoard[r][c]) {
-                lastRow = r;
-                lastCol = c;
+                lastMoveFound = { row: r, col: c };
             }
         }
     }
     
+    // ТІЛЬКИ ПІСЛЯ того, як знайшли останній хід - оновлюємо previousBoard
     previousBoard = JSON.parse(JSON.stringify(newBoard));
     
-    if (lastRow !== -1) {
-        return { row: lastRow, col: lastCol };
-    }
-    return null;
+    return lastMoveFound;
 }
     
 async function handleFinish(msg) {
