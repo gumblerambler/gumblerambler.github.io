@@ -342,16 +342,16 @@ async function sendGrant() {
             
             const result = await response.json();
             const el = document.getElementById('dbCapital');
-            //const name = document.getElementById('userName');
-            //const group = document.getElementById('userGroup');
+            const name = document.getElementById('userName');
+            const group = document.getElementById('userGroup');
             if (document.getElementById('userName')) document.getElementById('userName').innerText = result.name;
             if (document.getElementById('userGroup')) document.getElementById('userGroup').innerText = result.group;
             if (el && result.status === "success") {
               
                 const cleanCapital = parseFloat(result.capital).toFixed(2);
                 el.innerText = cleanCapital + " ECCYB";
-                //name.innterText = result.name;
-                //group.innterText = result.group;
+                name.innterText = result.name;
+                group.innterText = result.group;
                 log("User "+result.name+" from "+result.group+" with wallet "+userAddress);
                 console.log("Капітал оновлено: " + cleanCapital);
             } else {
