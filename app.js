@@ -16,6 +16,8 @@ const i18n = {
         infoStake: "Invest your capital into projects. This module locks tokens for a specific period to earn business revenue. Early exit forfeits the profit.",
         titleTrans: "Asset Transfers",
         infoTrans: "Securely send ECCYB tokens to other business entities within the BTTC network.",
+        titleGame: "Gamification",
+        infoGame: "Improve your softskills by beating the computer in Gomoku.",
         titleAdmin: "Treasury Control", linkForgot: "Forgot password?", resetTitle: "Reset Password",
         infoAdmin: "Management of the firm's central treasury: audit student balances, distribute initial grants, and gas support."
     },
@@ -29,6 +31,8 @@ const i18n = {
         infoStake: "Інвестуйте капітал у проекти. Цей модуль блокує токени на певний термін для отримання прибутку. Дострокове виведення скасовує бонус.",
         titleTrans: "Переказ активів",
         infoTrans: "Безпечно надсилайте токени ECCYB іншим підрозділам у мережі BTTC.",
+        titleGame: "Гейміфікація",
+        infoGame: "Покращуйте свої навички, перемагаючи комп'ютер у грі Gomoku.",        
         titleAdmin: "Керування казною", linkForgot: "Забули пароль?", resetTitle: "Відновлення пароля",
         infoAdmin: "Інструменти фінансового директора: аудит балансів студентів, видача початкових грантів та підтримка газом (BTT)."
     }
