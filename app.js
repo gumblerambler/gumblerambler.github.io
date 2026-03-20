@@ -12,6 +12,8 @@ const i18n = {
         gas: "Gas", bal: "Token", connBtn: "Connect MetaMask", logOutMsg: "Session ended.",
         wait: "Processing...", ok: "Success!", stakeTitle: "Deposit", withdrawTitle: "Withdraw",
         btnStake: "Stake", btnClaim: "Claim", btnEarly: "Early exit", btnSend: "Send",
+        titleName: "User's dashboard",
+        infoName: "User Info from Database:",
         titleStake: "Business Investment", capital: "Capital", authTitle: "Login",
         infoStake: "Invest your capital into projects. This module locks tokens for a specific period to earn business revenue. Early exit forfeits the profit.",
         titleTrans: "Asset Transfers",
@@ -27,6 +29,8 @@ const i18n = {
         wait: "Обробка...", ok: "Успішно!", stakeTitle: "Депозит",  withdrawTitle: "Повернення",
         btnStake: "Вкласти", btnClaim: "Повернути з прибутком", btnEarly: "Повернути без прибутку",
         btnSend: "Перевести",
+        titleName: "Панель користувача",
+        infoName: "Дані користувача з БД:",
         titleStake: "Господарські інвестиції", capital: "Капітал", authTitle: "Авторизація",
         infoStake: "Інвестуйте капітал у проекти. Цей модуль блокує токени на певний термін для отримання прибутку. Дострокове виведення скасовує бонус.",
         titleTrans: "Переказ активів",
@@ -338,11 +342,15 @@ async function sendGrant() {
             
             const result = await response.json();
             const el = document.getElementById('dbCapital');
+            const name = document.getElementById('userName');
+            const group = document.getElementById('userGroup');
             
             if (el && result.status === "success") {
               
                 const cleanCapital = parseFloat(result.capital).toFixed(2);
                 el.innerText = cleanCapital + " ECCYB";
+                name.innterText = result.name;
+                name.innterText = result.group;
                 log("User "+result.name+" from "+result.group);
                 console.log("Капітал оновлено: " + cleanCapital);
             } else {
