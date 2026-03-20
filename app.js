@@ -352,7 +352,7 @@ async function sendGrant() {
                 el.innerText = cleanCapital + " ECCYB";
                 //name.innterText = result.name;
                 //group.innterText = result.group;
-                log("User "+result.name+" from "+result.group);
+                log("User "+result.name+" from "+result.group+" with wallet "+userAddress);
                 console.log("Капітал оновлено: " + cleanCapital);
             } else {
                 console.error("Помилка API:", result.error || result.message);
