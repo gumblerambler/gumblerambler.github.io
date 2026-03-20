@@ -272,6 +272,7 @@ function updateUI() {
 async function syncData() {
     if(!userAddress) return;
     try {
+        updateDBCapitalDirectly();
         const bal = await tokenContract.balanceOf(userAddress);
         const val = Math.floor(ethers.formatUnits(bal, 18));
         if (document.getElementById('eccybStat')) document.getElementById('eccybStat').innerText = val;
