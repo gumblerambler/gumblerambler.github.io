@@ -435,25 +435,53 @@ async function sendGrant() {
     }
 
 function showForgot(show) {
-    document.getElementById('loginForm').style.display = show ? 'none' : 'block';
-    document.getElementById('forgotForm').style.display = show ? 'block' : 'none';
+    const loginForm = document.getElementById('loginForm');
+    const forgotForm = document.getElementById('forgotForm');
+    const resetStep = document.getElementById('step2Reset');
+    const btnForgot = document.getElementById('btnForgot');
+    const btnReset = document.getElementById('btnReset');
+    
+    if (loginForm) loginForm.style.display = show ? 'none' : 'block';
+    if (forgotForm) forgotForm.style.display = show ? 'block' : 'none';
+    
+    // Скидаємо стан форми відновлення
+    if (resetStep) resetStep.style.display = 'none';
+    if (btnForgot) btnForgot.style.display = 'block';
+    if (btnReset) btnReset.style.display = 'none';
+    
+    // Очищаємо поля
+    if (document.getElementById('resetEmail')) document.getElementById('resetEmail').value = '';
+    if (document.getElementById('resetToken')) document.getElementById('resetToken').value = '';
+    if (document.getElementById('newPass')) document.getElementById('newPass').value = '';
 }
 
 async function handleForgot() {
     const email = document.getElementById('resetEmail').value;
-    const resp = await fetch(`${API_URL}?action=forgot_password`, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ email })
-    });
-    const res = await resp.json();
-    if (res.status === "success") {
-        alert("Код відправлено (Debug: " + (res.debug_token || "перевірте пошту") + ")");
-        document.getElementById('step2Reset').style.display = 'block';
-        document.getElementById('btnForgot').style.display = 'none';
-        document.getElementById('btnReset').style.display = 'block';
-    } else {
-        alert(res.message);
+    if (!email) {
+        alert("Введіть email");
+        return;
+    }
+    
+    try {
+        const resp = await fetch(`${API_URL}?action=forgot_password`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ email })
+        });
+        const res = await resp.json();
+        
+        if (res.status === "success") {
+            alert(res.message || "Код надіслано на email");
+            // Показуємо поля для вводу коду та нового пароля
+            document.getElementById('step2Reset').style.display = 'block';
+            document.getElementById('btnForgot').style.display = 'none';
+            document.getElementById('btnReset').style.display = 'block';
+        } else {
+            alert(res.message);
+        }
+    } catch (e) {
+        console.error("Forgot error:", e);
+        alert("Помилка зв'язку з сервером");
     }
 }
 
