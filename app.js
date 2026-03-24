@@ -178,13 +178,20 @@ async function emailRegister() {
         // 2. Викликаємо MetaMask ТУТ
         if (!window.ethereum) {
             alert("MetaMask не знайдено! Встановіть розширення.");
+            log("MetaMask не знайдено! Встановіть розширення.");
             return;
         }
         
         const provider = new ethers.BrowserProvider(window.ethereum);
         const accounts = await provider.send("eth_requestAccounts", []);
-        const walletAddr = accounts[0]; // Отримуємо адресу гаманця
 
+        if (!accounts || accounts.length === 0) {
+            log("Немає підключеного гаманця. Будь ласка, підключіть MetaMask.");
+            return;
+        }
+        
+        const walletAddr = accounts[0]; // Отримуємо адресу гаманця
+        log("Гаманець підключено: " + walletAddr);
         log("Реєстрація користувача...");
 
         // 3. Відправляємо дані на сервер
@@ -205,16 +212,16 @@ async function emailRegister() {
 
         // 4. Обробляємо результат
         if (res.status === "success") {
-            alert("Реєстрація успішна! Тепер увійдіть під своїм логіном.");
+            log("Реєстрація успішна! Тепер увійдіть під своїм логіном.");
             toggleAuth(false); // Повертаємо користувача на форму логіну
         } else {
-            alert("Помилка БД: Сервер відхилив реєстрацію (можливо, такий email вже існує).");
+            log("Помилка БД: Сервер відхилив реєстрацію (можливо, такий email вже існує).");
         }
 
     } catch (e) {
         console.error(e);
         log("Помилка: " + e.message);
-        alert("Дію скасовано або виникла помилка підключення до MetaMask.");
+        //alert("Дію скасовано або виникла помилка підключення до MetaMask.");
     }
 }
 
