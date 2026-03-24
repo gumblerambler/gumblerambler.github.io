@@ -462,17 +462,42 @@ async function handleReset() {
     const token = document.getElementById('resetToken').value;
     const new_password = document.getElementById('newPass').value;
 
-    const resp = await fetch(`${API_URL}?action=reset_password`, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ email, token, new_password })
-    });
-    const res = await resp.json();
-    if (res.status === "success") {
-        alert("Пароль оновлено!");
-        showForgot(false);
-    } else {
-        alert(res.message);
+    // Перевірка на порожні поля
+    if (!email || !token || !new_password) {
+        alert("Будь ласка, заповніть всі поля");
+        return;
+    }
+
+    console.log("Sending reset request:", { email, token, new_password });
+
+    try {
+        const resp = await fetch(`${API_URL}?action=reset_password`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ 
+                email: email, 
+                token: token, 
+                new_password: new_password 
+            })
+        });
+        
+        const res = await resp.json();
+        console.log("Reset response:", res);
+        
+        if (res.status === "success") {
+            alert(res.message);
+            // Повертаємося до форми логіну
+            showForgot(false);
+            // Очищаємо поля
+            document.getElementById('resetEmail').value = '';
+            document.getElementById('resetToken').value = '';
+            document.getElementById('newPass').value = '';
+        } else {
+            alert(res.message);
+        }
+    } catch (e) {
+        console.error("Reset error:", e);
+        alert("Помилка зв'язку з сервером");
     }
 }
 
