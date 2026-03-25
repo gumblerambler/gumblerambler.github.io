@@ -199,9 +199,9 @@ async function emailLogin() {
     }
 }
 
-async function reWallet() {
+async function reconnectWallet() {
     try {
-        log("Reing wallet...");
+        log("Reconnecting wallet...");
         
         // 1. Запитуємо підключення гаманця
         const provider = new ethers.BrowserProvider(window.ethereum);
@@ -212,15 +212,15 @@ async function reWallet() {
             return;
         }
         
-        const edAddress = accounts[0].toLowerCase();
-        log("ed wallet: " + edAddress);
+        const connectedAddress = accounts[0].toLowerCase();
+        log("Connected wallet: " + connectedAddress);
         
         // 2. Перевіряємо, чи є збережений email (ознака, що користувач колись входив)
         const userEmail = sessionStorage.getItem('userEmail');
         
         if (!userEmail) {
             // Немає збереженого email — значить користувач не входив, просто підключаємо гаманець
-            await ();
+            await connect();
             return;
         }
         
@@ -230,7 +230,7 @@ async function reWallet() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
                 action: 'login', 
-                address: edAddress 
+                address: connectedAddress 
             })
         });
         
@@ -239,21 +239,21 @@ async function reWallet() {
         if (result.status === "success" && result.data) {
             // Гаманець знайдено в БД — відновлюємо сесію
             sessionStorage.setItem('isLoggedIn', 'true');
-            sessionStorage.setItem('walletAddress', edAddress);
+            sessionStorage.setItem('walletAddress', connectedAddress);
             
-            await establishSession(edAddress);
+            await establishSession(connectedAddress);
             showUI(true);
             await syncData();
             log("Session restored successfully!");
         } else {
-            alert(`Гаманець ${edAddress.slice(0,6)}...${edAddress.slice(-4)} не зареєстрований. Будь ласка, увійдіть з email.`);
+            alert(`Гаманець ${connectedAddress.slice(0,6)}...${connectedAddress.slice(-4)} не зареєстрований. Будь ласка, увійдіть з email.`);
             // Очищаємо сесію і пропонуємо увійти
             logout();
         }
         
     } catch (e) {
-        console.error("Re error:", e);
-        log("Re error: " + e.message);
+        console.error("Reconnect error:", e);
+        log("Reconnect error: " + e.message);
     }
 }
 
