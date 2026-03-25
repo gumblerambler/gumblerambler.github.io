@@ -115,6 +115,25 @@ async function emailLogin() {
     }
 }
 
+async function reconnectWallet() {
+    try {
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const accounts = await provider.send("eth_requestAccounts", []);
+        if (accounts.length > 0) {
+            const newAddress = accounts[0].toLowerCase();
+            const loggedIn = sessionStorage.getItem('isLoggedIn') === 'true';
+            
+            if (loggedIn) {
+                await handleAccountChange(newAddress);
+            } else {
+                await connect();
+            }
+        }
+    } catch (e) {
+        console.error("Reconnect error:", e);
+    }
+}
+
 async function syncWithBackend(address) {
     if (!address) return;
     try {
