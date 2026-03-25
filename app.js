@@ -53,34 +53,25 @@ async function init() {
         window.ethereum.on('accountsChanged', async (accounts) => {
             console.log("Accounts changed:", accounts);
             if (accounts.length > 0) {
-                // Спроба відновити сесію з новим гаманцем
+                // При зміні гаманця просто перевіряємо і відновлюємо
                 const newAddress = accounts[0].toLowerCase();
-                const userEmail = sessionStorage.getItem('userEmail');
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'login', address: newAddress })
+                });
+                const result = await response.json();
                 
-                if (userEmail) {
-                    // Була сесія — перевіряємо новий гаманець
-                    const response = await fetch(API_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ action: 'login', address: newAddress })
-                    });
-                    const result = await response.json();
-                    
-                    if (result.status === "success" && result.data) {
-                        // Гаманець правильний — оновлюємо сесію
-                        await establishSession(newAddress);
-                        showUI(true);
-                        await syncData();
-                    } else {
-                        // Гаманець неправильний — виходимо
-                        logout();
-                    }
+                if (result.status === "success" && result.data) {
+                    await establishSession(newAddress);
+                    sessionStorage.setItem('walletAddress', newAddress);
+                    showUI(true);
+                    await syncData();
                 } else {
-                    // Немає сесії — просто оновлюємо інтерфейс
-                    window.location.reload();
+                    showUI(false);
                 }
             } else {
-                logout();
+                showUI(false);
             }
         });
 
@@ -88,15 +79,20 @@ async function init() {
             window.location.reload();
         });
 
-        // При завантаженні — перевіряємо, чи є активна сесія
-        const userEmail = sessionStorage.getItem('userEmail');
-        const walletAddress = sessionStorage.getItem('walletAddress');
-        
-        if (userEmail && walletAddress) {
-            // Спроба відновити сесію
-            const accounts = await window.ethereum.request({ method: 'eth_accounts' });
-            if (accounts.length > 0 && accounts[0].toLowerCase() === walletAddress) {
-                await establishSession(walletAddress);
+        // Перевіряємо при завантаженні
+        const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+        if (accounts.length > 0) {
+            const address = accounts[0].toLowerCase();
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'login', address: address })
+            });
+            const result = await response.json();
+            
+            if (result.status === "success" && result.data) {
+                await establishSession(address);
+                sessionStorage.setItem('walletAddress', address);
                 showUI(true);
                 await syncData();
             } else {
@@ -201,59 +197,50 @@ async function emailLogin() {
 
 async function reconnectWallet() {
     try {
-        log("Reconnecting wallet...");
+        log("Перевірка гаманця...");
         
-        // 1. Запитуємо підключення гаманця
+        // Отримуємо поточний гаманець
         const provider = new ethers.BrowserProvider(window.ethereum);
         const accounts = await provider.send("eth_requestAccounts", []);
         
         if (!accounts || accounts.length === 0) {
-            alert("Немає підключеного гаманця");
+            log("Немає підключеного гаманця");
             return;
         }
         
-        const connectedAddress = accounts[0].toLowerCase();
-        log("Connected wallet: " + connectedAddress);
+        const currentAddress = accounts[0].toLowerCase();
+        log("Поточний гаманець: " + currentAddress);
         
-        // 2. Перевіряємо, чи є збережений email (ознака, що користувач колись входив)
-        const userEmail = sessionStorage.getItem('userEmail');
-        
-        if (!userEmail) {
-            // Немає збереженого email — значить користувач не входив, просто підключаємо гаманець
-            await connect();
-            return;
-        }
-        
-        // 3. Перевіряємо, чи підключений гаманець належить цьому користувачеві
+        // Перевіряємо в БД, чи є такий гаманець
         const response = await fetch(API_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                action: 'login', 
-                address: connectedAddress 
-            })
+            body: JSON.stringify({ action: 'login', address: currentAddress })
         });
         
         const result = await response.json();
         
         if (result.status === "success" && result.data) {
-            // Гаманець знайдено в БД — відновлюємо сесію
+            // Гаманець зареєстрований — відновлюємо сесію
             sessionStorage.setItem('isLoggedIn', 'true');
-            sessionStorage.setItem('walletAddress', connectedAddress);
+            sessionStorage.setItem('userEmail', result.data.email);
+            sessionStorage.setItem('walletAddress', currentAddress);
             
-            await establishSession(connectedAddress);
+            await establishSession(currentAddress);
             showUI(true);
             await syncData();
-            log("Session restored successfully!");
+            log("✅ Гаманець підключено!");
         } else {
-            alert(`Гаманець ${connectedAddress.slice(0,6)}...${connectedAddress.slice(-4)} не зареєстрований. Будь ласка, увійдіть з email.`);
-            // Очищаємо сесію і пропонуємо увійти
-            logout();
+            log("❌ Гаманець не зареєстровано");
+            alert("Цей гаманець не зареєстровано. Будь ласка, увійдіть через email.");
+            // Очищаємо сесію і показуємо форму входу
+            sessionStorage.clear();
+            showUI(false);
         }
         
     } catch (e) {
         console.error("Reconnect error:", e);
-        log("Reconnect error: " + e.message);
+        log("Помилка: " + e.message);
     }
 }
 
@@ -374,9 +361,9 @@ async function connect() {
         
         if (accounts && accounts.length > 0) {
             const address = accounts[0].toLowerCase();
-            log("Wallet connected: " + address);
+            log("Підключено гаманець: " + address);
             
-            // Перевіряємо, чи цей гаманець вже зареєстрований
+            // Перевіряємо, чи зареєстрований
             const response = await fetch(API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -386,25 +373,21 @@ async function connect() {
             const result = await response.json();
             
             if (result.status === "success" && result.data) {
-                // Гаманець зареєстрований — відновлюємо сесію
                 sessionStorage.setItem('isLoggedIn', 'true');
                 sessionStorage.setItem('userEmail', result.data.email);
                 sessionStorage.setItem('walletAddress', address);
                 await establishSession(address);
                 showUI(true);
                 await syncData();
-                log("Welcome back!");
             } else {
-                // Гаманець не зареєстрований — пропонуємо реєстрацію
-                alert("Wallet not registered. Please register first.");
+                alert("Гаманець не зареєстровано. Будь ласка, зареєструйтесь.");
                 window.location.href = "index.html";
             }
         }
     } catch (e) {
-        log("Connection rejected: " + e.message);
+        log("Помилка: " + e.message);
     }
 }
-
 async function establishSession(addr) {
     userAddress = addr;
     const provider = new ethers.BrowserProvider(window.ethereum);
