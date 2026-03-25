@@ -139,8 +139,6 @@ async function emailLogin() {
     if (!email || !pass) return;
 
     try {
-        log("Checking credentials...");
-        
         const accounts = await window.ethereum.request({ method: 'eth_accounts' });
         const currentMetaMaskAddr = accounts[0]?.toLowerCase();
 
@@ -161,16 +159,17 @@ async function emailLogin() {
             const dbWalletAddr = result.data.wallet_address.toLowerCase();
 
             if (currentMetaMaskAddr !== dbWalletAddr) {
-                alert(`This account is linked to another wallet: ${dbWalletAddr.slice(0, 6)}...${dbWalletAddr.slice(-4)}. Please switch your MetaMask account.`);
+                alert(`This account is linked to wallet: ${dbWalletAddr.slice(0, 6)}...${dbWalletAddr.slice(-4)}. Please switch your MetaMask account.`);
                 return;
             }
 
-            // Зберігаємо email і пароль для перевірки при зміні гаманця
+            // Зберігаємо ВСЕ необхідне
+            sessionStorage.setItem('isLoggedIn', 'true');
             sessionStorage.setItem('userEmail', email);
             sessionStorage.setItem('userPassword', pass);
-            sessionStorage.setItem('isLoggedIn', 'true');
+            sessionStorage.setItem('walletAddress', dbWalletAddr);  // <-- ДОДАНО
             
-            await establishSession(result.data.wallet_address);
+            await establishSession(dbWalletAddr);
             showUI(true);
             log("Welcome, " + email);
         } else {
@@ -183,20 +182,41 @@ async function emailLogin() {
 
 async function reconnectWallet() {
     try {
+        // Перевіряємо, чи є активна сесія
+        const loggedIn = sessionStorage.getItem('isLoggedIn') === 'true';
+        if (!loggedIn) {
+            alert("Немає активного входу. Будь ласка, увійдіть.");
+            window.location.href = "index.html";
+            return;
+        }
+
+        // Запитуємо підключення гаманця
         const provider = new ethers.BrowserProvider(window.ethereum);
         const accounts = await provider.send("eth_requestAccounts", []);
-        if (accounts.length > 0) {
-            const newAddress = accounts[0].toLowerCase();
-            const loggedIn = sessionStorage.getItem('isLoggedIn') === 'true';
-            
-            if (loggedIn) {
-                await handleAccountChange(newAddress);
-            } else {
-                await connect();
-            }
+        
+        if (!accounts || accounts.length === 0) {
+            alert("Немає підключеного гаманця");
+            return;
         }
+        
+        const connectedAddress = accounts[0].toLowerCase();
+        
+        // Отримуємо збережену адресу з sessionStorage (при вході ми її зберігаємо)
+        const savedAddress = sessionStorage.getItem('walletAddress');
+        
+        if (connectedAddress === savedAddress) {
+            // Гаманець правильний — оновлюємо сесію
+            await establishSession(connectedAddress);
+            showUI(true);
+            await syncData();
+            log("Гаманець успішно перепідключено!");
+        } else {
+            alert(`Будь ласка, підключіть гаманець: ${savedAddress.slice(0,6)}...${savedAddress.slice(-4)}`);
+        }
+        
     } catch (e) {
         console.error("Reconnect error:", e);
+        log("Помилка: " + e.message);
     }
 }
 
@@ -615,23 +635,18 @@ async function handleReset() {
 }
 
 function logout() {
-    // Очищаємо всі дані сесії
     sessionStorage.removeItem('isLoggedIn');
     sessionStorage.removeItem('userEmail');
     sessionStorage.removeItem('userPassword');
+    sessionStorage.removeItem('walletAddress');  // <-- ДОДАНО
     
-    // Скидаємо глобальні змінні
     userAddress = null;
     signer = null;
     tokenContract = null;
     stakingContract = null;
     
-    // Перемикаємо інтерфейс
     showUI(false);
-    
     log(i18n[currentLang].logOutMsg);
-    
-    // Опціонально: перезавантажуємо сторінку
     window.location.href = "index.html";
 }
 
