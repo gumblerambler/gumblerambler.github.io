@@ -49,11 +49,11 @@
 <script>
     async function stakeAction() {
         const amt = ethers.parseUnits(document.getElementById('sAmt').value, 18);
-        const days = document.getElementById('sDays').value;
+        // days більше не потрібен – видаляємо або ігноруємо
         log("Approving..."); 
         const tx = await tokenContract.approve(STAKING_ADDR, amt); 
         await tx.wait();
-        handleTx(stakingContract.stake(amt, days));
+        handleTx(stakingContract.stake(amt)); // ← тільки сума
     }
 </script>
 </body>
