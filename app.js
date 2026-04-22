@@ -316,6 +316,11 @@ async function syncData() {
         const provider = new ethers.BrowserProvider(window.ethereum);
         const gas = await provider.getBalance(userAddress);
         if (document.getElementById('gasBalance')) document.getElementById('gasBalance').innerText = parseFloat(ethers.formatEther(gas)).toFixed(4);
+        const pending = await getPendingReward();
+        const pendingElem = document.getElementById('pendingReward');
+        if (pendingElem) {
+            pendingElem.innerText = parseFloat(pending).toFixed(4) + " ECCYB";
+        }
     } catch (e) { console.error(e); }
 }
 
@@ -580,6 +585,17 @@ async function handleTx(txPromise) {
     } catch (e) { 
         log("Error: " + (e.reason || e.message)); 
     }
+
+async function getPendingReward() {
+    if (!userAddress || !stakingContract) return "0";
+    try {
+        const rewardWei = await stakingContract.pendingReward(userAddress);
+        return ethers.formatUnits(rewardWei, 18);
+    } catch {
+        return "0";
+    }
+    
+}
 }
 
 window.onload = init;
