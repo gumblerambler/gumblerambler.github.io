@@ -261,7 +261,8 @@ async function establishSession(addr) {
     tokenContract = new ethers.Contract(TOKEN_ADDR, [
         "function balanceOf(address) view returns (uint256)", 
         "function transfer(address, uint256) returns (bool)", 
-        "function approve(address, uint256) returns (bool)", 
+        "function approve(address, uint256) returns (bool)",
+        "function allowance(address owner, address spender) view returns (uint256)", // ДОДАТИ
         "function mint(address, uint256) public", 
         "function burn(uint256) public"
     ], signer);
