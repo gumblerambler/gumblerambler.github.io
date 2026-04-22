@@ -1,6 +1,7 @@
 const TOKEN_ADDR = "0x4aa97493d7c8e570a548549222d21e91aa6c60ca";
-const STAKING_ADDR = "0x440C907485cb68B3A708EcC3d0E93d121bF6dAeb";
+const STAKING_ADDR = "0xB704E16DDc2c4D4aB1d0852669aECe1da8448fc8";
 const OWNER_ADDR = "0xf08b28c6d8a26cd1a24d1dbc95c89005f1e04ead";
+//const STAKING_ADDR = "0x440C907485cb68B3A708EcC3d0E93d121bF6dAeb";
 
 const API_URL = "https://projects.eccyb.org/app/api.php";
 // Додати в i18n
@@ -266,9 +267,10 @@ async function establishSession(addr) {
     ], signer);
     
     stakingContract = new ethers.Contract(STAKING_ADDR, [
-        "function stake(uint256, uint256) external", 
+        "function stake(uint256 amount) external",           // тепер один параметр
         "function withdraw() external", 
-        "function earlyWithdraw() external"
+        "function earlyWithdraw() external",
+        "function pendingReward(address user) view returns (uint256)" // для відображення
     ], signer);
 
     // Синхронізація з MySQL бекендом
