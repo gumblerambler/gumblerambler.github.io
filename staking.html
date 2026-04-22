@@ -47,14 +47,42 @@
 </div>
 <script src="app.js"></script>
 <script>
-    async function stakeAction() {
-        const amt = ethers.parseUnits(document.getElementById('sAmt').value, 18);
-        // days більше не потрібен – видаляємо або ігноруємо
-        log("Approving..."); 
-        const tx = await tokenContract.approve(STAKING_ADDR, amt); 
-        await tx.wait();
-        handleTx(stakingContract.stake(amt)); // ← тільки сума
+    
+async function stakeAction() {
+    const amtInput = document.getElementById('sAmt').value;
+    if (!amtInput || parseFloat(amtInput) <= 0) {
+        log("Введіть коректну суму");
+        return;
     }
+    const amt = ethers.parseUnits(amtInput, 18);
+    
+    try {
+        // Перевіряємо поточний дозвіл
+        const currentAllowance = await tokenContract.allowance(userAddress, STAKING_ADDR);
+        log(`Поточний дозвіл: ${ethers.formatUnits(currentAllowance, 18)} ECCYB`);
+        
+        // Якщо дозволу недостатньо – робимо approve
+        if (currentAllowance < amt) {
+            // Деякі токени вимагають спочатку обнулити allowance
+            if (currentAllowance > 0) {
+                log("Скидаємо дозвіл на 0...");
+                const resetTx = await tokenContract.approve(STAKING_ADDR, 0);
+                await resetTx.wait();
+            }
+            log(`Схвалюємо ${ethers.formatUnits(amt, 18)} токенів...`);
+            const approveTx = await tokenContract.approve(STAKING_ADDR, amt);
+            await approveTx.wait();
+            log("Дозвіл успішно встановлено");
+        } else {
+            log("Дозвіл вже достатній");
+        }
+        
+        // Викликаємо stake (без days)
+        await handleTx(stakingContract.stake(amt));
+    } catch (e) {
+        log("Помилка: " + (e.reason || e.message));
+    }
+}
 </script>
 </body>
 </html>
