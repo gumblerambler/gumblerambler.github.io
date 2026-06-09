@@ -385,8 +385,8 @@ async function sendGrant() {
               
                 const cleanCapital = parseFloat(result.capital).toFixed(2);
                 el.innerText = cleanCapital + " ECCYB";
-                name.innterText = result.name;
-                group.innterText = result.group;
+                name.innerText = result.name;
+                group.innerText = result.group;
                 log("User "+result.name+" from "+result.group+" with wallet "+userAddress);
                 console.log("Капітал оновлено: " + cleanCapital);
             } else {
