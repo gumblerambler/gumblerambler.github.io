@@ -1,12 +1,9 @@
 const TOKEN_ADDR = "0x4aa97493d7c8e570a548549222d21e91aa6c60ca";
 const STAKING_ADDR = "0xB704E16DDc2c4D4aB1d0852669aECe1da8448fc8";
 const OWNER_ADDR = "0xf08b28c6d8a26cd1a24d1dbc95c89005f1e04ead";
-//const STAKING_ADDR = "0x440C907485cb68B3A708EcC3d0E93d121bF6dAeb";
 
 const API_URL = "https://projects.eccyb.org/app/api.php";
-// Додати в i18n
-// en: linkForgot: "Forgot password?", resetTitle: "Reset Password"
-// ua: linkForgot: "Забули пароль?", resetTitle: "Відновлення пароля"
+
 const i18n = {
     en: {
         home: "Home", stake: "Staking", wallet: "Transfer", admin: "Admin", logout: "Logout", game: "Gomoku",
@@ -27,7 +24,7 @@ const i18n = {
     ua: {
         home: "Головна", stake: "Стейкінг", wallet: "Переказ", admin: "Адмін", logout: "Вийти", game: "Гра 5-в-ряд",
         gas: "Газ", bal: "Токен", connBtn: "Підключити MetaMask", logOutMsg: "Сесію завершено.",
-        wait: "Обробка...", ok: "Успішно!", stakeTitle: "Депозит",  withdrawTitle: "Повернення",
+        wait: "Обробка...", ok: "Успішно!", stakeTitle: "Депозит", withdrawTitle: "Повернення",
         btnStake: "Вкласти", btnClaim: "Повернути з прибутком", btnEarly: "Повернути без прибутку",
         btnSend: "Перевести",
         titleName: "Панель користувача",
@@ -45,7 +42,6 @@ const i18n = {
 
 let currentLang = localStorage.getItem('eccyb_lang') || 'en';
 let signer, tokenContract, stakingContract, userAddress;
-
 
 async function init() {
     updateUI();
@@ -69,15 +65,14 @@ async function init() {
 }
 
 async function emailLogin() {
-    const email = document.getElementById('logEmail').value.trim();
-    const pass = document.getElementById('logPass').value.trim();
+    const email = document.getElementById('logEmail')?.value.trim();
+    const pass = document.getElementById('logPass')?.value.trim();
 
     if (!email || !pass) return;
 
     try {
         log("Checking credentials...");
         
-        // Отримуємо поточну адресу з MetaMask
         const accounts = await window.ethereum.request({ method: 'eth_accounts' });
         const currentMetaMaskAddr = accounts[0]?.toLowerCase();
 
@@ -97,13 +92,11 @@ async function emailLogin() {
         if (result.status === "success") {
             const dbWalletAddr = result.data.wallet_address.toLowerCase();
 
-            // ПЕРЕВІРКА: чи збігається активний гаманець з гаманцем у БД
             if (currentMetaMaskAddr !== dbWalletAddr) {
                 alert(`This account is linked to another wallet: ${dbWalletAddr.slice(0, 6)}...${dbWalletAddr.slice(-4)}. Please switch your MetaMask account.`);
-                return; // Блокуємо вхід
+                return;
             }
 
-            // Якщо все добре — пускаємо
             sessionStorage.setItem('isLoggedIn', 'true');
             await establishSession(result.data.wallet_address);
             showUI(true);
@@ -125,7 +118,7 @@ async function reconnectWallet() {
             const loggedIn = sessionStorage.getItem('isLoggedIn') === 'true';
             
             if (loggedIn) {
-                await handleAccountChange(newAddress);
+                await establishSession(newAddress);
             } else {
                 await connect();
             }
@@ -142,7 +135,7 @@ async function syncWithBackend(address) {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
-                action: 'login', // Екшн для отримання капіталу
+                action: 'login',
                 address: address.toLowerCase() 
             })
         });
@@ -155,12 +148,10 @@ async function syncWithBackend(address) {
     } catch (e) { console.error(e); }
 }
 
-
 async function handleRegister() {
-    const email = document.getElementById('regEmail').value;
-    const pass = document.getElementById('regPass').value;
+    const email = document.getElementById('regEmail')?.value;
+    const pass = document.getElementById('regPass')?.value;
     
-    // Спочатку просимо підключити гаманець, щоб прив'язати його
     if (!userAddress) await connect();
 
     const response = await fetch(`${API_URL}?action=register`, {
@@ -177,25 +168,24 @@ async function handleRegister() {
 }
 
 function toggleAuth(showReg) {
-    document.getElementById('loginForm').style.display = showReg ? 'none' : 'block';
-    document.getElementById('regForm').style.display = showReg ? 'block' : 'none';
+    const loginForm = document.getElementById('loginForm');
+    const regForm = document.getElementById('regForm');
+    if (loginForm) loginForm.style.display = showReg ? 'none' : 'block';
+    if (regForm) regForm.style.display = showReg ? 'block' : 'none';
 }
 
 async function emailRegister() {
-    // 1. Збираємо дані з форми
-    const email = document.getElementById('regEmail').value.trim();
-    const pass = document.getElementById('regPass').value.trim();
-    const fullName = document.getElementById('regFullName').value.trim();
-    const groupName = document.getElementById('regGroup').value.trim();
+    const email = document.getElementById('regEmail')?.value.trim();
+    const pass = document.getElementById('regPass')?.value.trim();
+    const fullName = document.getElementById('regFullName')?.value.trim();
+    const groupName = document.getElementById('regGroup')?.value.trim();
 
-    // Перевірка на заповнення полів (фронтенд)
     if(!fullName || !groupName || !email || !pass) {
         alert("Будь ласка, заповніть всі поля форми.");
         return;
     }
 
     try {
-        // 2. Викликаємо MetaMask ТУТ
         if (!window.ethereum) {
             alert("MetaMask не знайдено! Встановіть розширення.");
             log("MetaMask не знайдено! Встановіть розширення.");
@@ -210,11 +200,10 @@ async function emailRegister() {
             return;
         }
         
-        const walletAddr = accounts[0]; // Отримуємо адресу гаманця
+        const walletAddr = accounts[0];
         log("Гаманець підключено: " + walletAddr);
         log("Реєстрація користувача...");
 
-        // 3. Відправляємо дані на сервер
         const resp = await fetch(API_URL, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
@@ -230,10 +219,9 @@ async function emailRegister() {
 
         const res = await resp.json();
 
-        // 4. Обробляємо результат
         if (res.status === "success") {
             log("Реєстрація успішна! Тепер увійдіть під своїм логіном.");
-            toggleAuth(false); // Повертаємо користувача на форму логіну
+            toggleAuth(false);
         } else {
             log("Помилка БД: Сервер відхилив реєстрацію (можливо, такий email вже існує).");
         }
@@ -241,7 +229,6 @@ async function emailRegister() {
     } catch (e) {
         console.error(e);
         log("Помилка: " + e.message);
-        //alert("Дію скасовано або виникла помилка підключення до MetaMask.");
     }
 }
 
@@ -262,21 +249,19 @@ async function establishSession(addr) {
         "function balanceOf(address) view returns (uint256)", 
         "function transfer(address, uint256) returns (bool)", 
         "function approve(address, uint256) returns (bool)",
-        "function allowance(address owner, address spender) view returns (uint256)", // ДОДАТИ
+        "function allowance(address owner, address spender) view returns (uint256)",
         "function mint(address, uint256) public", 
         "function burn(uint256) public"
     ], signer);
     
     stakingContract = new ethers.Contract(STAKING_ADDR, [
-        "function stake(uint256 amount) external",           // тепер один параметр
+        "function stake(uint256 amount) external",
         "function withdraw() external", 
         "function earlyWithdraw() external",
-        "function pendingReward(address user) view returns (uint256)" // для відображення
+        "function pendingReward(address user) view returns (uint256)"
     ], signer);
 
-    // Синхронізація з MySQL бекендом
     await syncWithBackend(userAddress);
- 
     showUI(true);
     await syncData();
 
@@ -286,12 +271,14 @@ async function establishSession(addr) {
     });
 }
 
-
-
 function showUI(connected) {
-    document.getElementById('authSection').style.display = connected ? 'none' : 'block';
-    document.getElementById('mainNav').style.display = connected ? 'flex' : 'none';
-    document.getElementById('dataSection').style.display = connected ? 'block' : 'none';
+    const authSection = document.getElementById('authSection');
+    const mainNav = document.getElementById('mainNav');
+    const dataSection = document.getElementById('dataSection');
+
+    if (authSection) authSection.style.display = connected ? 'none' : 'block';
+    if (mainNav) mainNav.style.display = connected ? 'flex' : 'none';
+    if (dataSection) dataSection.style.display = connected ? 'block' : 'none';
 }
 
 function setLang(lang) { currentLang = lang; localStorage.setItem('eccyb_lang', lang); updateUI(); }
@@ -299,36 +286,54 @@ function setLang(lang) { currentLang = lang; localStorage.setItem('eccyb_lang', 
 function updateUI() {
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
-        if (i18n[currentLang][key]) el.innerText = i18n[currentLang][key];
+        if (i18n[currentLang] && i18n[currentLang][key]) {
+            el.innerText = i18n[currentLang][key];
+        }
     });
     document.querySelectorAll('.lang-btn').forEach(btn => {
         btn.classList.toggle('active', btn.innerText.toLowerCase() === currentLang);
     });
 }
 
+async function getPendingReward() {
+    if (!userAddress || !stakingContract) return "0";
+    try {
+        const rewardWei = await stakingContract.pendingReward(userAddress);
+        return ethers.formatUnits(rewardWei, 18);
+    } catch (e) {
+        return "0";
+    }
+}
+
 async function syncData() {
     if(!userAddress) return;
     try {
-        updateDBCapitalDirectly();
-        const bal = await tokenContract.balanceOf(userAddress);
-        const val = Math.floor(ethers.formatUnits(bal, 18));
-        if (document.getElementById('eccybStat')) document.getElementById('eccybStat').innerText = val;
+        await updateDBCapitalDirectly();
+        if (tokenContract) {
+            const bal = await tokenContract.balanceOf(userAddress);
+            const val = Math.floor(ethers.formatUnits(bal, 18));
+            const statElem = document.getElementById('eccybStat');
+            if (statElem) statElem.innerText = val;
+        }
         
-        const provider = new ethers.BrowserProvider(window.ethereum);
-        const gas = await provider.getBalance(userAddress);
-        if (document.getElementById('gasBalance')) document.getElementById('gasBalance').innerText = parseFloat(ethers.formatEther(gas)).toFixed(4);
+        if (window.ethereum) {
+            const provider = new ethers.BrowserProvider(window.ethereum);
+            const gas = await provider.getBalance(userAddress);
+            const gasElem = document.getElementById('gasBalance');
+            if (gasElem) gasElem.innerText = parseFloat(ethers.formatEther(gas)).toFixed(4);
+        }
+
         const pending = await getPendingReward();
         const pendingElem = document.getElementById('pendingReward');
         if (pendingElem) {
             pendingElem.innerText = parseFloat(pending).toFixed(4) + " ECCYB";
         }
-    } catch (e) { console.error(e); }
+    } catch (e) { console.error("Sync data error:", e); }
 }
 
 async function sendGrant() {
-    // Отримуємо значення з полів вводу index.html
-    const studentAddr = document.getElementById('targetStudent').value.trim();
-    const amount = document.getElementById('grantAmt').value;
+    const studentAddr = document.getElementById('targetStudent')?.value.trim();
+    const amount = document.getElementById('grantAmt')?.value;
 
     if (!studentAddr || !amount) {
         log("Please enter address and amount");
@@ -341,7 +346,7 @@ async function sendGrant() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                admin_address: userAddress, // Ваш гаманець (має збігатися з OWNER_ADDR)
+                admin_address: userAddress,
                 student_address: studentAddr,
                 amount: amount
             })
@@ -351,8 +356,8 @@ async function sendGrant() {
         
         if (result.status === "success") {
             log(`Success: ${amount} capital allocated to ${studentAddr.substring(0,8)}...`);
-            // Очищуємо поля після успіху
-            document.getElementById('grantAmt').value = '';
+            const grantInput = document.getElementById('grantAmt');
+            if (grantInput) grantInput.value = '';
         } else {
             log("Grant failed: " + result.message);
         }
@@ -361,105 +366,98 @@ async function sendGrant() {
     }
 }
 
-    async function updateDBCapitalDirectly() {
-        if (!userAddress) return;
-        try {
-            // Ми використовуємо POST, щоб api.php точно побачив 'action' у $input
-            const response = await fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    action: 'get_user_data', 
-                    address: userAddress.toLowerCase() 
-                })
-            });
-            
-            const result = await response.json();
-            const el = document.getElementById('dbCapital');
-            const name = document.getElementById('userName');
-            const group = document.getElementById('userGroup');
-            if (document.getElementById('userName')) document.getElementById('userName').innerText = result.name;
-            if (document.getElementById('userGroup')) document.getElementById('userGroup').innerText = result.group;
-            if (document.getElementById('userAddress')) document.getElementById('userAddress').innerText = userAddress;
-            if (el && result.status === "success") {
-              
-                const cleanCapital = parseFloat(result.capital).toFixed(2);
-                el.innerText = cleanCapital + " ECCYB";
-                name.innerText = result.name;
-                group.innerText = result.group;
-                log("User "+result.name+" from "+result.group+" with wallet "+userAddress);
-                console.log("Капітал оновлено: " + cleanCapital);
-            } else {
-                console.error("Помилка API:", result.error || result.message);
-            }
-        } catch (err) {
-            console.error("Мережева помилка при оновленні капіталу:", err);
-        }
-    }
+async function updateDBCapitalDirectly() {
+    if (!userAddress) return;
+    try {
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                action: 'get_user_data', 
+                address: userAddress.toLowerCase() 
+            })
+        });
+        
+        const result = await response.json();
+        const el = document.getElementById('dbCapital');
+        const name = document.getElementById('userName');
+        const group = document.getElementById('userGroup');
+        const addrElem = document.getElementById('userAddress');
 
-    async function addNetworkAndToken() {
-        try {
-            if (!window.ethereum) {
-                alert("MetaMask is not installed!");
-                return;
-            }
-    
-            // Параметри мережі
-            const bttcChainId = '0xc7'; // 199 у шістнадцятковій системі
-            
-            // Перевіряємо, чи ми вже в цій мережі
-            const currentChainId = await window.ethereum.request({ method: 'eth_chainId' });
-            
-            if (currentChainId !== bttcChainId) {
-                try {
-                    // Намагаємося просто переключитися (якщо мережа вже є)
+        if (name && result.name) name.innerText = result.name;
+        if (group && result.group) group.innerText = result.group;
+        if (addrElem) addrElem.innerText = userAddress;
+
+        if (result.status === "success" && result.capital !== undefined) {
+            const cleanCapital = parseFloat(result.capital).toFixed(2);
+            if (el) el.innerText = cleanCapital + " ECCYB";
+            log("User "+(result.name || '')+" from "+(result.group || '')+" with wallet "+userAddress);
+            console.log("Капітал оновлено: " + cleanCapital);
+        } else {
+            console.error("Помилка API:", result.error || result.message);
+        }
+    } catch (err) {
+        console.error("Мережева помилка при оновленні капіталу:", err);
+    }
+}
+
+async function addNetworkAndToken() {
+    try {
+        if (!window.ethereum) {
+            alert("MetaMask is not installed!");
+            return;
+        }
+
+        const bttcChainId = '0xc7';
+        const currentChainId = await window.ethereum.request({ method: 'eth_chainId' });
+        
+        if (currentChainId !== bttcChainId) {
+            try {
+                await window.ethereum.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: bttcChainId }],
+                });
+            } catch (switchError) {
+                if (switchError.code === 4902) {
                     await window.ethereum.request({
-                        method: 'wallet_switchEthereumChain',
-                        params: [{ chainId: bttcChainId }],
+                        method: 'wallet_addEthereumChain',
+                        params: [{
+                            chainId: bttcChainId,
+                            chainName: 'BitTorrent Chain Mainnet',
+                            nativeCurrency: { 
+                                name: 'BitTorrent', 
+                                symbol: 'BTT', 
+                                decimals: 18 
+                            },
+                            rpcUrls: ['https://rpc.bt.io'],
+                            blockExplorerUrls: ['https://bttcscan.com']
+                        }]
                     });
-                } catch (switchError) {
-                    // Якщо мережі немає (код помилки 4902), додаємо її
-                    if (switchError.code === 4902) {
-                        await window.ethereum.request({
-                            method: 'wallet_addEthereumChain',
-                            params: [{
-                                chainId: bttcChainId,
-                                chainName: 'BitTorrent Chain Mainnet',
-                                nativeCurrency: { 
-                                    name: 'BitTorrent', 
-                                    symbol: 'BTT', 
-                                    decimals: 18 
-                                },
-                                rpcUrls: ['https://rpc.bt.io'],
-                                blockExplorerUrls: ['https://bttcscan.com']
-                            }]
-                        });
-                    } else {
-                        throw switchError;
-                    }
+                } else {
+                    throw switchError;
                 }
             }
-    
-            // 2. Додаємо токен (викликається окремо, щоб гарантувати імпорт)
-            await window.ethereum.request({
-                method: 'wallet_watchAsset',
-                params: {
-                    type: 'ERC20',
-                    options: {
-                        address: TOKEN_ADDR,
-                        symbol: 'ECCYB',
-                        decimals: 18,
-                        image: 'https://projects.eccyb.org/app/logo.png', 
-                    },
-                },
-            });
-    
-            log(currentLang === 'ua' ? "BTTC та ECCYB налаштовано!" : "BTTC & ECCYB ready!");
-        } catch (error) {
-            console.error("Setup error:", error);
-            log("Error: " + error.message);
         }
+
+        await window.ethereum.request({
+            method: 'wallet_watchAsset',
+            params: {
+                type: 'ERC20',
+                options: {
+                    address: TOKEN_ADDR,
+                    symbol: 'ECCYB',
+                    decimals: 18,
+                    image: 'https://projects.eccyb.org/app/logo.png', 
+                },
+            },
+        });
+
+        log(currentLang === 'ua' ? "BTTC та ECCYB налаштовано!" : "BTTC & ECCYB ready!");
+    } catch (error) {
+        console.error("Setup error:", error);
+        log("Error: " + error.message);
     }
+}
 
 function showForgot(show) {
     const loginForm = document.getElementById('loginForm');
@@ -471,19 +469,17 @@ function showForgot(show) {
     if (loginForm) loginForm.style.display = show ? 'none' : 'block';
     if (forgotForm) forgotForm.style.display = show ? 'block' : 'none';
     
-    // Скидаємо стан форми відновлення
     if (resetStep) resetStep.style.display = 'none';
     if (btnForgot) btnForgot.style.display = 'block';
     if (btnReset) btnReset.style.display = 'none';
     
-    // Очищаємо поля
     if (document.getElementById('resetEmail')) document.getElementById('resetEmail').value = '';
     if (document.getElementById('resetToken')) document.getElementById('resetToken').value = '';
     if (document.getElementById('newPass')) document.getElementById('newPass').value = '';
 }
 
 async function handleForgot() {
-    const email = document.getElementById('resetEmail').value;
+    const email = document.getElementById('resetEmail')?.value;
     if (!email) {
         alert("Введіть email");
         return;
@@ -499,10 +495,13 @@ async function handleForgot() {
         
         if (res.status === "success") {
             alert(res.message || "Код надіслано на email");
-            // Показуємо поля для вводу коду та нового пароля
-            document.getElementById('step2Reset').style.display = 'block';
-            document.getElementById('btnForgot').style.display = 'none';
-            document.getElementById('btnReset').style.display = 'block';
+            const resetStep = document.getElementById('step2Reset');
+            const btnForgot = document.getElementById('btnForgot');
+            const btnReset = document.getElementById('btnReset');
+            
+            if (resetStep) resetStep.style.display = 'block';
+            if (btnForgot) btnForgot.style.display = 'none';
+            if (btnReset) btnReset.style.display = 'block';
         } else {
             alert(res.message);
         }
@@ -513,17 +512,14 @@ async function handleForgot() {
 }
 
 async function handleReset() {
-    const email = document.getElementById('resetEmail').value;
-    const token = document.getElementById('resetToken').value;
-    const new_password = document.getElementById('newPass').value;
+    const email = document.getElementById('resetEmail')?.value;
+    const token = document.getElementById('resetToken')?.value;
+    const new_password = document.getElementById('newPass')?.value;
 
-    // Перевірка на порожні поля
     if (!email || !token || !new_password) {
         alert("Будь ласка, заповніть всі поля");
         return;
     }
-
-    console.log("Sending reset request:", { email, token, new_password });
 
     try {
         const resp = await fetch(`${API_URL}?action=reset_password`, {
@@ -537,16 +533,13 @@ async function handleReset() {
         });
         
         const res = await resp.json();
-        console.log("Reset response:", res);
         
         if (res.status === "success") {
             alert(res.message);
-            // Повертаємося до форми логіну
             showForgot(false);
-            // Очищаємо поля
-            document.getElementById('resetEmail').value = '';
-            document.getElementById('resetToken').value = '';
-            document.getElementById('newPass').value = '';
+            if (document.getElementById('resetEmail')) document.getElementById('resetEmail').value = '';
+            if (document.getElementById('resetToken')) document.getElementById('resetToken').value = '';
+            if (document.getElementById('newPass')) document.getElementById('newPass').value = '';
         } else {
             alert(res.message);
         }
@@ -557,46 +550,28 @@ async function handleReset() {
 }
 
 function logout() {
-    // 1. Очищуємо мітку входу, яку ми додавали для безпеки
     sessionStorage.removeItem('isLoggedIn');
-    
-    // 2. Скидаємо глобальну адресу
     userAddress = null;
-    
-    // 3. Перемикаємо інтерфейс назад на форму логіну
     showUI(false);
-    
-    // 4. Очищуємо консоль або статус
-    log(i18n[currentLang].logOutMsg);
-    
-    // 5. Опціонально: перезавантажуємо сторінку, щоб повністю очистити пам'ять
+    log(i18n[currentLang]?.logOutMsg || "Session ended.");
     window.location.href = "index.html"; 
-    // або просто:
-    // window.location.reload();
 }
-function log(msg) { const c = document.getElementById('console'); if (c) c.innerHTML = `> ${msg}<br>` + c.innerHTML; }
+
+function log(msg) { 
+    const c = document.getElementById('console'); 
+    if (c) c.innerHTML = `> ${msg}<br>` + c.innerHTML; 
+}
 
 async function handleTx(txPromise) {
     try { 
-        log(i18n[currentLang].wait); 
+        log(i18n[currentLang]?.wait || "Processing..."); 
         const tx = await txPromise; 
         await tx.wait(); 
-        log(i18n[currentLang].ok); 
+        log(i18n[currentLang]?.ok || "Success!"); 
         await syncData(); 
     } catch (e) { 
         log("Error: " + (e.reason || e.message)); 
     }
-
-async function getPendingReward() {
-    if (!userAddress || !stakingContract) return "0";
-    try {
-        const rewardWei = await stakingContract.pendingReward(userAddress);
-        return ethers.formatUnits(rewardWei, 18);
-    } catch {
-        return "0";
-    }
-    
-}
 }
 
 window.onload = init;
