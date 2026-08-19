@@ -4,6 +4,18 @@ const OWNER_ADDR = "0xf08b28c6d8a26cd1a24d1dbc95c89005f1e04ead";
 
 const API_URL = "https://projects.eccyb.org/app/api.php";
 
+// Дозволяємо запити з вашого GitHub Pages
+header("Access-Control-Allow-Origin: https://gumblerambler.github.io");
+header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
+header("Access-Control-Allow-Credentials: true");
+
+// Обробка preflight-запиту (OPTIONS)
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit();
+}
+
 const i18n = {
     en: {
         home: "Home", stake: "Staking", wallet: "Transfer", admin: "Admin", logout: "Logout", game: "Gomoku",
